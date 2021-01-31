@@ -1,0 +1,17 @@
+# docker-compose up --build web
+# docker-compose run web ./manage.py shell
+# docker-compose run web sh
+services:
+  redis:
+    image: redis:alpine
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./friendexing:/opt/friendexing
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis
