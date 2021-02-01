@@ -25,12 +25,13 @@ SECRET_KEY = 'd!2^(l8ke+6s02qv2b*5&%q7+-gz#p!(9pds&+fow1rh($g&&z'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'games',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

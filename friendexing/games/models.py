@@ -1,27 +1,50 @@
-from typing import List, Dict
-from uuid import UUID
+from typing import List, Dict, Optional
+from uuid import UUID, uuid4
 
 
 class Game:
-    id: UUID
-    settings: 'Settings'
-    players: List['Player']
-    batches: List['Batch']
-    state: str
+
+    def __init__(
+            self,
+            total_time_to_guess: int,
+            should_randomize_fields: bool,
+            name: str,
+    ):
+        self.id = uuid4()
+        self.settings = Settings(
+            total_time_to_guess,
+            should_randomize_fields,
+        )
+        self.players: List['Player'] = [
+            Player(
+                name,
+            ),
+        ]
+        self.batches: List['Batch'] = []
+        self.state = 'wait'
 
 
 class Settings:
-    max_time_to_guess: int
-    should_randomize_fields: bool
+    def __init__(
+            self,
+            total_time_to_guess: int,
+            should_randomize_fields: bool,
+    ):
+        self.total_time_to_guess = total_time_to_guess
+        self.should_randomize_fields = should_randomize_fields
 
 
 class Player:
-    id: UUID
-    name: str
-    score: int
-    guess_id: int
-    guess: str
-    guess_time: int
+    def __init__(
+            self,
+            name: str,
+    ):
+        self.id = uuid4()
+        self.name: str = name
+        self.score = 0
+        self.guess_id: Optional[int] = None
+        self.guess: Optional[str] = None
+        self.guess_time: Optional[int] = None
 
 
 class Batch:
