@@ -4,6 +4,7 @@
 services:
   redis:
     image: redis:alpine
+
   web:
     build: .
     command: python manage.py runserver 0.0.0.0:8000
@@ -15,3 +16,23 @@ services:
       - redis
     environment:
       - REDIS_URL=redis://redis
+
+  test:
+    build:
+      dockerfile: test.Dockerfile
+      context: .
+    command: python run_tests.py
+    volumes:
+      - ./tests:/opt/testfriendexing
+    depends_on:
+      - chromium
+      - web
+    environment:
+      - REDIS_URL=redis://redis
+
+  chromium:
+    image: selenium/standalone-chrome
+    ports:
+    - "4444:4444"
+    volumes:
+    - "/dev/shm:/dev/shm"
