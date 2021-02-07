@@ -51,6 +51,6 @@ services:
     build:
       dockerfile: qa.Dockerfile
       context: .
-    command: prospector --strictness veryhigh --with-tool vulture --with-tool mypy --with-tool bandit
+    command: prospector
     volumes:
       - .:/opt/qafriendexing

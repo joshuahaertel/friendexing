@@ -1,0 +1,18 @@
+strictness: veryhigh
+uses:
+    - django
+test-warnings: true
+
+bandit:
+  run: true
+
+mypy:
+  run: true
+  options:
+    strict: true
+
+pep257:
+  run: true
+
+vulture:
+  run: true
