@@ -1,4 +1,4 @@
-# docker build -f Dockerfile . -t friendexing:latest
+# docker build -f web.Dockerfile . -t friendexing_web:latest
 FROM python:alpine
 ENV PYTHONUNBUFFERED=1
 WORKDIR /opt/friendexing

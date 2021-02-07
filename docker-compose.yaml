@@ -6,7 +6,9 @@ services:
     image: redis:alpine
 
   web:
-    build: .
+    build:
+      dockerfile: web.Dockerfile
+      context: .
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./friendexing:/opt/friendexing
@@ -44,3 +46,11 @@ services:
     - "4445:4444"
     volumes:
     - "/dev/shm:/dev/shm"
+
+  qa:
+    build:
+      dockerfile: qa.Dockerfile
+      context: .
+    command: prospector --strictness veryhigh --with-tool vulture --with-tool mypy --with-tool bandit
+    volumes:
+      - .:/opt/qafriendexing
