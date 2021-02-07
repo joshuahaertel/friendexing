@@ -21,12 +21,13 @@ services:
     build:
       dockerfile: test.Dockerfile
       context: .
-    command: python run_tests.py
+    command: python -m unittest -v
     volumes:
       - ./tests:/opt/testfriendexing
     depends_on:
-      - chromium
       - web
+      - chromium
+      - firefox
     environment:
       - REDIS_URL=redis://redis
 
@@ -34,5 +35,12 @@ services:
     image: selenium/standalone-chrome
     ports:
     - "4444:4444"
+    volumes:
+    - "/dev/shm:/dev/shm"
+
+  firefox:
+    image: selenium/standalone-firefox
+    ports:
+    - "4445:4444"
     volumes:
     - "/dev/shm:/dev/shm"
