@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, Any, Dict
+from uuid import UUID
 
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import FormView
@@ -12,11 +13,11 @@ GAME_EXPIRES_TIME = 120
 
 
 class GameCreate(FormView):
-    template_name = 'games/create.html'
-    form_class = GameForm
+    template_name = 'games/create.html'  # noqa: F841
+    form_class = GameForm  # noqa: F841
     game: Optional[Game] = None
 
-    def form_valid(self, form: GameForm):
+    def form_valid(self, form: GameForm) -> HttpResponseRedirect:
         self.game = form.create_game()
         response = super().form_valid(form)
         response.set_cookie(
@@ -26,12 +27,12 @@ class GameCreate(FormView):
         )
         return response
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         return f'/games/{self.game.id}/'
 
 
 @csrf_protect
-def game_view(request: HttpRequest, game_id):
+def game_view(request: HttpRequest, game_id: UUID) -> HttpResponse:
     game_id_str = str(game_id)
     player_id = request.COOKIES.get(game_id_str)
     if player_id:
@@ -47,10 +48,10 @@ def game_view(request: HttpRequest, game_id):
 
 
 class PlayerCreate(FormView):
-    template_name = 'games/join.html'
-    form_class = PlayerForm
+    template_name = 'games/join.html'  # noqa: F841
+    form_class = PlayerForm  # noqa: F841
 
-    def form_valid(self, form: PlayerForm):
+    def form_valid(self, form: PlayerForm) -> HttpResponseRedirect:
         player = form.create_player()
         response = super().form_valid(form)
         response.set_cookie(
@@ -60,10 +61,10 @@ class PlayerCreate(FormView):
         )
         return response
 
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs: Dict['str', Any]) -> Dict[str, Any]:
+        context_data: Dict[str, Any] = super().get_context_data(**kwargs)
         context_data['game_id'] = self.kwargs['game_id']
         return context_data
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         return f'/games/{self.kwargs["game_id"]}/'

@@ -13,6 +13,21 @@ mypy:
 
 pep257:
   run: true
+  disable:
+    - D100
+    - D101
+    - D102
+    - D103
+    - D104
+    - D105
+    - D106
+    - D107
+    - D212
+
+pylint:
+  disable:
+    - no-else-return
+    - unsubscriptable-object  # False positive with typing
 
 vulture:
   run: true

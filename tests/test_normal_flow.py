@@ -13,6 +13,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 class TestNormalFlow(TestCase):
+    chrome_driver: WebDriver
+    firefox_driver: WebDriver
+
     @classmethod
     def setUpClass(cls) -> None:
         chromium_address = os.getenv(
@@ -50,7 +53,7 @@ class TestNormalFlow(TestCase):
                 browser_driver = connect_command()
                 LOGGER.debug('Success on attempt %s', attempt_number)
                 return browser_driver
-            except Exception as error:
+            except Exception as error:  # pylint: disable=broad-except
                 LOGGER.debug(
                     'Received %s error when connecting to chrome driver '
                     'on try %s. %s',
@@ -60,13 +63,13 @@ class TestNormalFlow(TestCase):
                 )
         raise ConnectionError('Could not connect to browser driver')
 
-    def test_chrome_creation(self):
+    def test_chrome_creation(self) -> None:
         self._creation(self.chrome_driver)
 
-    def test_firefox_creation(self):
+    def test_firefox_creation(self) -> None:
         self._creation(self.firefox_driver)
 
-    def _creation(self, driver):
+    def _creation(self, driver: WebDriver) -> None:
         driver.get('http://web:8000/games/create/')
         name_elem = driver.find_element_by_id('id_name')
         name_elem.send_keys('Test Admin')
