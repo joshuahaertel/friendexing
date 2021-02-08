@@ -2,6 +2,7 @@ from datetime import timedelta, datetime
 from typing import Optional, Any, Dict
 from uuid import UUID
 
+from django.forms import BaseForm
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils.timezone import now
@@ -21,7 +22,8 @@ class GameCreate(FormView):
     form_class = GameForm  # noqa: F841
     game: Optional[Game] = None
 
-    def form_valid(self, form: GameForm) -> HttpResponse:
+    def form_valid(self, form: BaseForm) -> HttpResponse:
+        assert isinstance(form, GameForm)
         self.game = form.create_game()
         response = super().form_valid(form)
         response.set_cookie(
@@ -32,6 +34,7 @@ class GameCreate(FormView):
         return response
 
     def get_success_url(self) -> str:
+        assert self.game
         return f'/games/{self.game.id}/'
 
 
@@ -55,7 +58,8 @@ class PlayerCreate(FormView):
     template_name = 'games/join.html'  # noqa: F841
     form_class = PlayerForm  # noqa: F841
 
-    def form_valid(self, form: PlayerForm) -> HttpResponse:
+    def form_valid(self, form: BaseForm) -> HttpResponse:
+        assert isinstance(form, PlayerForm)
         player = form.create_player()
         response = super().form_valid(form)
         response.set_cookie(
