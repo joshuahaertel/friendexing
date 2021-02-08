@@ -70,7 +70,7 @@ class TestNormalFlow(TestCase):
         self._creation(self.firefox_driver)
 
     def _creation(self, driver: WebDriver) -> None:
-        driver.get('http://web:8000/games/create/')
+        driver.get('http://coverage:8000/games/create/')
         name_elem = driver.find_element_by_id('id_name')
         name_elem.send_keys('Test Admin')
         guess_elem = driver.find_element_by_id('id_total_time_to_guess')

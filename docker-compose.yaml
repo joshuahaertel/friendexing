@@ -20,6 +20,27 @@ services:
       - REDIS_URL=redis://redis
       - "SECRET_KEY=d!2^(l8ke+6s02qv2b*5&%q7+-gz#p!(9pds&+fow1rh(%g&&z"
 
+  coverage:
+    build:
+      dockerfile: coverage.Dockerfile
+      context: .
+    command: coverage run --branch manage.py runserver 0.0.0.0:8000 --noreload
+    volumes:
+      - ./friendexing:/opt/coveragefriendexing
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis
+      - "SECRET_KEY=d!2^(l8ke+6s02qv2b*5&%q7+-gz#p!(9pds&+fow1rh(%g&&z"
+
+  coveragereport:
+    build:
+      dockerfile: coverage.Dockerfile
+      context: .
+    command: coverage html
+    volumes:
+      - ./friendexing:/opt/coveragefriendexing
+
   test:
     build:
       dockerfile: test.Dockerfile
@@ -28,7 +49,7 @@ services:
     volumes:
       - ./tests:/opt/testfriendexing
     depends_on:
-      - web
+      - coverage
       - chromium
       - firefox
 
