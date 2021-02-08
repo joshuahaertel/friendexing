@@ -16,7 +16,7 @@
             <form action="/games/{{ game_id }}/join/" method="post">
                 {% csrf_token %}
                 {{ form }}
-                <input type="submit" value="Submit">
+                <input type="submit" value="Submit" id="id_submit">
             </form>
         </div>
     </div>

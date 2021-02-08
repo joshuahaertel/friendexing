@@ -63,13 +63,13 @@ class TestNormalFlow(TestCase):
                 )
         raise ConnectionError('Could not connect to browser driver')
 
-    def test_chrome_creation(self) -> None:
-        self._creation(self.chrome_driver)
+    def test_normal_flow(self) -> None:
+        join_url_1 = self._create_game(self.chrome_driver)
+        join_url_2 = self._create_game(self.firefox_driver)
+        self._join_game(self.chrome_driver, join_url_2)
+        self._join_game(self.firefox_driver, join_url_1)
 
-    def test_firefox_creation(self) -> None:
-        self._creation(self.firefox_driver)
-
-    def _creation(self, driver: WebDriver) -> None:
+    def _create_game(self, driver: WebDriver) -> str:
         driver.get('http://coverage:8000/games/create/')
         name_elem = driver.find_element_by_id('id_name')
         name_elem.send_keys('Test Admin')
@@ -80,6 +80,17 @@ class TestNormalFlow(TestCase):
         )
         randomize_elem.click()
         randomize_elem.click()
+        submit_elem = driver.find_element_by_id('id_submit')
+        submit_elem.click()
+        self.assertEqual('Play', driver.title)
+        assert isinstance(driver.current_url, str)
+        return driver.current_url
+
+    def _join_game(self, driver: WebDriver, join_url: str) -> None:
+        driver.get(join_url)
+        self.assertEqual('Join Game', driver.title)
+        name_elem = driver.find_element_by_id('id_name')
+        name_elem.send_keys('Test Player')
         submit_elem = driver.find_element_by_id('id_submit')
         submit_elem.click()
         self.assertEqual('Play', driver.title)
