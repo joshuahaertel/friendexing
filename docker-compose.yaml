@@ -54,3 +54,5 @@ services:
     command: prospector
     volumes:
       - .:/opt/qafriendexing
+    environment:
+      SECRET_KEY: 1234

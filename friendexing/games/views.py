@@ -1,15 +1,19 @@
+from datetime import timedelta, datetime
 from typing import Optional, Any, Dict
 from uuid import UUID
 
-from django.http import HttpRequest, HttpResponseRedirect, HttpResponse
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect
+from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import FormView
 
 from games.forms import GameForm, PlayerForm
 from games.models import Game
 
-GAME_EXPIRES_TIME = 120
+
+def get_expiry() -> datetime:
+    return now() + timedelta(hours=2)
 
 
 class GameCreate(FormView):
@@ -17,13 +21,13 @@ class GameCreate(FormView):
     form_class = GameForm  # noqa: F841
     game: Optional[Game] = None
 
-    def form_valid(self, form: GameForm) -> HttpResponseRedirect:
+    def form_valid(self, form: GameForm) -> HttpResponse:
         self.game = form.create_game()
         response = super().form_valid(form)
         response.set_cookie(
             key=str(self.game.id),
             value=str(self.game.players[0].id),
-            expires=120,
+            expires=get_expiry(),
         )
         return response
 
@@ -40,7 +44,7 @@ def game_view(request: HttpRequest, game_id: UUID) -> HttpResponse:
         response.set_cookie(
             key=game_id_str,
             value=player_id,
-            expires=GAME_EXPIRES_TIME,
+            expires=get_expiry(),
         )
         return response
     else:
@@ -51,13 +55,13 @@ class PlayerCreate(FormView):
     template_name = 'games/join.html'  # noqa: F841
     form_class = PlayerForm  # noqa: F841
 
-    def form_valid(self, form: PlayerForm) -> HttpResponseRedirect:
+    def form_valid(self, form: PlayerForm) -> HttpResponse:
         player = form.create_player()
         response = super().form_valid(form)
         response.set_cookie(
             key=str(self.kwargs['game_id']),
             value=str(player.id),
-            expires=GAME_EXPIRES_TIME,
+            expires=get_expiry(),
         )
         return response
 
