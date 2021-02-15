@@ -7,11 +7,11 @@ services:
 
   web:
     build:
-      dockerfile: web.Dockerfile
       context: .
+      target: web
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - ./friendexing:/opt/friendexing
+      - ./friendexing:/opt/friendexing/friendexing
     ports:
       - "8000:8000"
     depends_on:
@@ -19,35 +19,40 @@ services:
     environment:
       - REDIS_URL=redis://redis
       - "SECRET_KEY=d!2^(l8ke+6s02qv2b*5&%q7+-gz#p!(9pds&+fow1rh(%g&&z"
+      - ENABLE_EXTRA=1
 
   coverage:
     build:
-      dockerfile: coverage.Dockerfile
       context: .
-    command: coverage run --branch manage.py runserver 0.0.0.0:8000 --noreload
+      target: coverage
+    command: coverage run -p --branch manage.py runserver 0.0.0.0:8000 --noreload
     volumes:
-      - ./friendexing:/opt/coveragefriendexing
+      - ./friendexing:/opt/friendexing/friendexing
     depends_on:
       - redis
     environment:
       - REDIS_URL=redis://redis
       - "SECRET_KEY=d!2^(l8ke+6s02qv2b*5&%q7+-gz#p!(9pds&+fow1rh(%g&&z"
+      - ENABLE_EXTRA=1
 
   coveragereport:
     build:
-      dockerfile: coverage.Dockerfile
       context: .
-    command: coverage html
+      target: coverage
+    command: sh report_coverage.sh
     volumes:
-      - ./friendexing:/opt/coveragefriendexing
+      - ./friendexing:/opt/friendexing/friendexing
+      - ./tests:/opt/friendexing/tests
+      - ./htmlcov:/opt/friendexing/htmlcov
+    working_dir: /opt/friendexing
 
   test:
     build:
-      dockerfile: test.Dockerfile
       context: .
-    command: python -m unittest -v
+      target: test
+    command: coverage run -p --branch -m unittest -v
     volumes:
-      - ./tests:/opt/testfriendexing
+      - ./tests:/opt/friendexing/tests
     depends_on:
       - coverage
       - chromium
@@ -67,12 +72,12 @@ services:
     volumes:
     - "/dev/shm:/dev/shm"
 
-  qa:
+  lint:
     build:
-      dockerfile: qa.Dockerfile
       context: .
+      target: lint
     command: prospector
     volumes:
-      - .:/opt/qafriendexing
+      - .:/opt/friendexing
     environment:
       - SECRET_KEY=1234
