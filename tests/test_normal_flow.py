@@ -42,6 +42,11 @@ class TestNormalFlow(TestCase):
         )
         cls.addClassCleanup(cls.chrome_driver.quit)
         cls.addClassCleanup(cls.firefox_driver.quit)
+        cls.addClassCleanup(
+            lambda: cls.chrome_driver.get(
+                'http://coverage:8000/extra/kill-server/',
+            )
+        )
 
     @staticmethod
     def connect_to_web_driver(

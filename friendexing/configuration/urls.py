@@ -17,6 +17,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 
 """
+import os
+
 from django.contrib import admin
 from django.urls import path, include
 
@@ -24,3 +26,8 @@ urlpatterns = [  # noqa: F841
     path('games/', include('games.urls')),
     path('admin/', admin.site.urls),
 ]
+
+if os.getenv('ENABLE_EXTRA'):  # pragma: no cover
+    urlpatterns.append(
+        path('extra/', include('extra.urls'))
+    )
