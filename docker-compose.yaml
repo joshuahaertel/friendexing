@@ -1,6 +1,6 @@
-# docker-compose up --build web
-# docker-compose run web ./manage.py shell
-# docker-compose run web sh
+# COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build web
+# COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose run web ./manage.py shell
+# COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose run web sh
 services:
 # COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build web
   web:
