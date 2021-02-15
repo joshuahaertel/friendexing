@@ -2,9 +2,7 @@
 # docker-compose run web ./manage.py shell
 # docker-compose run web sh
 services:
-  redis:
-    image: redis:alpine
-
+# COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build web
   web:
     build:
       context: .
@@ -19,8 +17,44 @@ services:
     environment:
       - REDIS_URL=redis://redis
       - "SECRET_KEY=d!2^(l8ke+6s02qv2b*5&%q7+-gz#p!(9pds&+fow1rh(%g&&z"
-      - ENABLE_EXTRA=1
 
+# COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build test
+  test:
+    build:
+      context: .
+      target: test
+    command: coverage run -p --branch -m unittest -v
+    volumes:
+      - ./tests:/opt/friendexing/tests
+    depends_on:
+      - coverage
+      - chromium
+      - firefox
+
+# COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build coveragereport
+  coveragereport:
+    build:
+      context: .
+      target: coverage
+    command: sh report_coverage.sh
+    volumes:
+      - ./friendexing:/opt/friendexing/friendexing
+      - ./tests:/opt/friendexing/tests
+      - ./htmlcov:/opt/friendexing/htmlcov
+    working_dir: /opt/friendexing
+
+# COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build lint
+  lint:
+    build:
+      context: .
+      target: lint
+    command: prospector
+    volumes:
+      - .:/opt/friendexing
+    environment:
+      - SECRET_KEY=1234
+
+# Dependencies
   coverage:
     build:
       context: .
@@ -35,28 +69,8 @@ services:
       - "SECRET_KEY=d!2^(l8ke+6s02qv2b*5&%q7+-gz#p!(9pds&+fow1rh(%g&&z"
       - ENABLE_EXTRA=1
 
-  coveragereport:
-    build:
-      context: .
-      target: coverage
-    command: sh report_coverage.sh
-    volumes:
-      - ./friendexing:/opt/friendexing/friendexing
-      - ./tests:/opt/friendexing/tests
-      - ./htmlcov:/opt/friendexing/htmlcov
-    working_dir: /opt/friendexing
-
-  test:
-    build:
-      context: .
-      target: test
-    command: coverage run -p --branch -m unittest -v
-    volumes:
-      - ./tests:/opt/friendexing/tests
-    depends_on:
-      - coverage
-      - chromium
-      - firefox
+  redis:
+    image: redis:alpine
 
   chromium:
     image: selenium/standalone-chrome
@@ -71,13 +85,3 @@ services:
     - "4445:4444"
     volumes:
     - "/dev/shm:/dev/shm"
-
-  lint:
-    build:
-      context: .
-      target: lint
-    command: prospector
-    volumes:
-      - .:/opt/friendexing
-    environment:
-      - SECRET_KEY=1234
