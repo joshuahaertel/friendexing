@@ -30,12 +30,29 @@
         </div>
         <div class="col-md order-1 order-md-2" id="main">
             <div class="row">
-                <div class="col" id="image">
+                <div class="col" id="image-1">
+                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                </div>
+                <div class="col" id="image-2" hidden>
+                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                </div>
+                <div class="col" id="image-3" hidden>
                     <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
                 </div>
             </div>
             <div class="row">
-                <div class="col" id="input"><p>Input</p></div>
+                <div class="col" id="input">
+                    <form>
+                        <div class="form-group row">
+                            <div class="col-12 col-lg-10">
+                                <input class="form-control" id="guess" type="text" placeholder="guess" required>
+                            </div>
+                            <div class="col col-lg-2">
+                                <button class="form-control">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
         <div class="col-md-2 order-3" id="score"><p>Score</p></div>
