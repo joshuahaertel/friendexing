@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <link href="{% static 'games/play.css' %}" rel="stylesheet">
     <title>Play</title>
 </head>
 <body>
-{% load static %}
 <div class="container">
     <div class="row" id="header">
         <div class="col">
@@ -15,17 +16,14 @@
         </div>
     </div>
     <div class="row" id="body">
-        <div class="col col-md-2 order-2 order-md-1" id="thumbnails">
-            <div class="row">
-                <div class="col-3 col-md-auto">
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail">
-                </div>
-                <div class="col-3 col-md-auto">
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail">
-                </div>
-                <div class="col-3 col-md-auto">
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail">
-                </div>
+        <div class="col-12 col-md-2 order-2 order-md-1" id="thumbnails">
+            <div class="overflow-auto d-flex d-md-block h-md-90vh">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100">
             </div>
         </div>
         <div class="col-md order-1 order-md-2" id="main">
@@ -37,6 +35,15 @@
                     <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
                 </div>
                 <div class="col" id="image-3" hidden>
+                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                </div>
+                <div class="col" id="image-4" hidden>
+                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                </div>
+                <div class="col" id="image-5" hidden>
+                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                </div>
+                <div class="col" id="image-6" hidden>
                     <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
                 </div>
             </div>

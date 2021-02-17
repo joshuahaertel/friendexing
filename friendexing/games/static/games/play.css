@@ -1,0 +1,12 @@
+.w-24 {
+  width: 24%;
+}
+
+@media screen and (min-width: 768px) {
+  .w-md-100 {
+    width: 100%;
+  }
+  .h-md-90vh {
+    height: 90vh;
+  }
+}
