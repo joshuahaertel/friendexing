@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
-
     <title>Play</title>
 </head>
 <body>
+{% load static %}
 <div class="container">
     <div class="row" id="header">
         <div class="col">
@@ -15,16 +15,30 @@
         </div>
     </div>
     <div class="row" id="body">
-        <div class="col" id="thumbnails"><p>Thumbnails</p></div>
-        <div class="col" id="main">
+        <div class="col col-md-2 order-2 order-md-1" id="thumbnails">
             <div class="row">
-                <div class="col" id="image"><p>Image</p></div>
+                <div class="col-3 col-md-auto">
+                    <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail">
+                </div>
+                <div class="col-3 col-md-auto">
+                    <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail">
+                </div>
+                <div class="col-3 col-md-auto">
+                    <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail">
+                </div>
+            </div>
+        </div>
+        <div class="col-md order-1 order-md-2" id="main">
+            <div class="row">
+                <div class="col" id="image">
+                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                </div>
             </div>
             <div class="row">
                 <div class="col" id="input"><p>Input</p></div>
             </div>
         </div>
-        <div class="col" id="score"><p>Score</p></div>
+        <div class="col-md-2 order-3" id="score"><p>Score</p></div>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
