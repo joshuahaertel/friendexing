@@ -10,6 +10,26 @@
     <title>Play</title>
 </head>
 <body>
+<div id="tone_modal_id" class="modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h5>Brightness</h5>
+                <i class="bi bi-brightness-alt-low-fill"></i>
+                <input type="range" min="0" max="2" value="1" step=".1" class="slider" id="brightness_slider_id">
+                <i class="bi bi-brightness-alt-high"></i>
+
+                <h5>Contrast</h5>
+                <i class="bi bi-circle"></i>
+                <input type="range" min="0" max="2" value="1" step=".1" class="slider" id="contrast_slider_id">
+                <i class="bi bi-circle-half"></i>
+                <br>
+                <button type="button" class="btn btn-light"><i class="bi bi-check"></i>Apply</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x"></i>Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container">
     <div class="row" id="header">
         <div class="col">
@@ -41,13 +61,8 @@
                         <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-left"></i></button>
                         <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-right"></i></button>
                         <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-toggles"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-square-half"></i></button>
+                        <button type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="modal" data-bs-target="#tone_modal_id"><i class="bi bi-square-half"></i></button>
                     </div>
-
-<!--                    <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-brightness-alt-high"></i></button>-->
-<!--                    <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-brightness-alt-low-fill"></i></button>-->
-<!--                    <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-circle"></i></button>-->
-<!--                    <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-circle-half"></i></button>-->
                 </div>
 
                 <div class="col" id="image-1">

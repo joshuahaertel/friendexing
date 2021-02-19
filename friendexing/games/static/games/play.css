@@ -1,3 +1,24 @@
+.modal-backdrop {
+   visibility: hidden;
+}
+
+.modal-dialog {
+  opacity: .75;
+}
+
+.modal-content {
+  background-color: black;
+}
+
+.modal-body {
+  color: white;
+  text-align: center;
+}
+
+.slider {
+  background: white;
+}
+
 .settings-holder {
   position: absolute;
   display: grid;
@@ -6,14 +27,14 @@
   width: 56px;
 }
 
+.settings-column {
+    display: grid;
+}
+
 .settings-button {
   width: 28px;
   height: 30px;
-  opacity: 50%;
-}
-
-.settings-column {
-    display: grid;
+  opacity: .75;
 }
 
 .w-24 {
