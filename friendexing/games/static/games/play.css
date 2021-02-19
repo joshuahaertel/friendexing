@@ -1,3 +1,21 @@
+.settings-holder {
+  position: absolute;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  width: 56px;
+}
+
+.settings-button {
+  width: 28px;
+  height: 30px;
+  opacity: 50%;
+}
+
+.settings-column {
+    display: grid;
+}
+
 .w-24 {
   width: 24%;
 }
