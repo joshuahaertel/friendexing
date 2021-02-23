@@ -21,16 +21,16 @@
 
                 <h5>Contrast</h5>
                 <i class="bi bi-circle"></i>
-                <input type="range" min="0" max="2" value="1" step=".1" class="slider" id="contrast_slider_id">
+                <input type="range" min="0" max="2" value="1" step=".01" class="slider" id="contrast_slider_id">
                 <i class="bi bi-circle-half"></i>
                 <br>
-                <button type="button" class="btn btn-light"><i class="bi bi-check"></i>Apply</button>
+                <button type="button" class="btn btn-light" id="apply_image_editor_button_id"><i class="bi bi-check"></i>Apply</button>
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x"></i>Cancel</button>
             </div>
         </div>
     </div>
 </div>
-<div class="container">
+<div class="container-fluid">
     <div class="row" id="header">
         <div class="col">
             <h1 class="text-center">Play Game!</h1>
@@ -38,50 +38,54 @@
     </div>
     <div class="row" id="body">
         <div class="col-12 col-md-2 order-2 order-md-1" id="thumbnails">
-            <div class="overflow-auto d-flex d-md-block h-md-90vh">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-1">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-2">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-3">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-4">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-5">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-6">
+            <div class="overflow-auto d-flex d-md-block h-md-90vh webkit-img-container">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="image-1">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="image-2">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="image-3">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="image-4">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="image-5">
+                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="image-6">
             </div>
         </div>
         <div class="col-md order-1 order-md-2" id="main">
-            <div id="image-holder" class="row">
+            <div id="main_image_container_id" class="row">
                 <div class="settings-holder p-0">
                     <div class="settings-column">
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-in"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-out"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-tools"></i></button>
+                        <button id="zoom_in_id" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-in"></i></button>
+                        <button id="zoom_out_id" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-out"></i></button>
+                        <button type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="collapse" data-bs-target="#extra_image_settings_id"><i class="bi bi-tools"></i></button>
                         <span class="settings-button"></span>
                     </div>
 
-                    <div class="settings-column">
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-left"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-right"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-toggles"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="modal" data-bs-target="#tone_modal_id"><i class="bi bi-square-half"></i></button>
+                    <div id="extra_image_settings_id" class="settings-column collapse">
+                        <button id="rotate_left_id" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-left"></i></button>
+                        <button id="rotate_right_id" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-right"></i></button>
+                        <button type="button" class="btn btn-dark settings-button p-0" id="invert_button_id"><i class="bi bi-square-half"></i></button>
+                        <button type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="modal" data-bs-target="#tone_modal_id"><i class="bi bi-toggles"></i></button>
                     </div>
                 </div>
 
-                <div class="col" id="image-1">
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                </div>
-                <div class="col" id="image-2" hidden>
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                </div>
-                <div class="col" id="image-3" hidden>
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                </div>
-                <div class="col" id="image-4" hidden>
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                </div>
-                <div class="col" id="image-5" hidden>
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                </div>
-                <div class="col" id="image-6" hidden>
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                <div id="image_view_port_id" class="image-viewer">
+                    <div id="image_holder_id">
+                        <div class="col" id="image-1">
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                        <div class="col" id="image-2" hidden>
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                        <div class="col" id="image-3" hidden>
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                        <div class="col" id="image-4" hidden>
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                        <div class="col" id="image-5" hidden>
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                        <div class="col" id="image-6" hidden>
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="row">
