@@ -16,7 +16,7 @@ let tempContrast = contrast;
 let brightness = 1;
 let tempBrightness = brightness;
 
-const imageViewPort = document.getElementById('image_view_port_id');
+const imageViewPort = document.getElementById('id_image_view_port');
 function setFilterStyle() {
   imageViewPort.style.setProperty(
       'filter',
@@ -26,24 +26,24 @@ function setFilterStyle() {
   );
 }
 
-document.getElementById('invert_button_id').onclick = function() {
+document.getElementById('id_invert_button').onclick = function() {
   invert = 1 ^ invert;
   setFilterStyle();
 };
 
-const brightnessSliderElement = document.getElementById('brightness_slider_id');
+const brightnessSliderElement = document.getElementById('id_brightness_slider');
 brightnessSliderElement.oninput = function() {
   tempBrightness = this.value;
   setFilterStyle();
 };
 
-const contrastSliderElement = document.getElementById('contrast_slider_id');
+const contrastSliderElement = document.getElementById('id_contrast_slider');
 contrastSliderElement.oninput = function() {
   tempContrast = this.value;
   setFilterStyle();
 };
 
-const modalElement = document.getElementById('tone_modal_id');
+const modalElement = document.getElementById('id_tone_modal');
 modalElement.addEventListener('hide.bs.modal', function() {
   tempContrast = contrast;
   tempBrightness = brightness;
@@ -53,7 +53,7 @@ modalElement.addEventListener('hide.bs.modal', function() {
 });
 
 const modal = new bootstrap.Modal(modalElement);
-const applyButton = document.getElementById('apply_image_editor_button_id');
+const applyButton = document.getElementById('id_apply_image_editor_button');
 applyButton.onclick = function() {
   contrast = tempContrast;
   brightness = tempBrightness;
@@ -66,7 +66,7 @@ let rotation = 0;
 let translateX = 0;
 let translateY = 0;
 
-const imageHolder = document.getElementById('image_holder_id');
+const imageHolder = document.getElementById('id_image_holder');
 function setTransformStyle() {
   imageHolder.style.setProperty(
       'transform',
@@ -76,7 +76,7 @@ function setTransformStyle() {
   );
 }
 
-document.getElementById('zoom_in_id').onclick = function() {
+document.getElementById('id_zoom_in').onclick = function() {
   if (scale >= 26) {
     return;
   }
@@ -84,7 +84,7 @@ document.getElementById('zoom_in_id').onclick = function() {
   setTransformStyle();
 };
 
-document.getElementById('zoom_out_id').onclick = function() {
+document.getElementById('id_zoom_out').onclick = function() {
   if (scale <= 0.1) {
     return;
   }
@@ -96,13 +96,13 @@ function mod(n, m) {
   return ((n % m) + m) % m;
 }
 
-document.getElementById('rotate_left_id').onclick = function() {
+document.getElementById('id_rotate_left').onclick = function() {
   rotation -= 90;
   rotation = mod(rotation, 360);
   setTransformStyle();
 };
 
-document.getElementById('rotate_right_id').onclick = function() {
+document.getElementById('id_rotate_right').onclick = function() {
   rotation += 90;
   rotation = mod(rotation, 360);
   setTransformStyle();
@@ -131,7 +131,7 @@ const rotationFuncMap = {
   },
 };
 
-const mainImageContainer = document.getElementById('main_image_container_id');
+const mainImageContainer = document.getElementById('id_main_image_container');
 mainImageContainer.onpointerdown = function(event) {
   event = event || window.event;
   event.preventDefault();
