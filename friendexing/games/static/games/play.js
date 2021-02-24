@@ -1,14 +1,17 @@
-function showImage(thumbnailImgElement) {
-  const possibleImages = mainImageContainer.querySelectorAll('.col');
-  const possibleImageArray = Array.from(possibleImages);
-  const mainImage = possibleImageArray.find(function(imgElement) {
-    return !imgElement.hidden;
-  });
-  mainImage.hidden = true;
-  const imageId = thumbnailImgElement.dataset.imageId;
-  const actualImageElement = document.getElementById(imageId);
-  actualImageElement.hidden = false;
-}
+const thumbnails = document.querySelectorAll('.img-thumbnail');
+thumbnails.forEach(function(thumbnail) {
+  thumbnail.onclick = function() {
+    const possibleImages = mainImageContainer.querySelectorAll('.col');
+    const possibleImageArray = Array.from(possibleImages);
+    const mainImage = possibleImageArray.find(function(imgElement) {
+      return !imgElement.hidden;
+    });
+    mainImage.hidden = true;
+    const imageId = this.dataset.imageId;
+    const actualImageElement = document.getElementById(imageId);
+    actualImageElement.hidden = false;
+  };
+});
 
 let invert = 0;
 let contrast = 1;

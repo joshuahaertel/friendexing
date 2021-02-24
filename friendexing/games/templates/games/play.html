@@ -16,16 +16,16 @@
             <div class="modal-body">
                 <h5>Brightness</h5>
                 <i class="bi bi-brightness-alt-low-fill"></i>
-                <input type="range" min="0" max="2" value="1" step=".1" class="slider" id="id_brightness_slider">
+                <input id="id_brightness_slider" type="range" min="0" max="2" value="1" step=".01" class="slider">
                 <i class="bi bi-brightness-alt-high"></i>
 
                 <h5>Contrast</h5>
                 <i class="bi bi-circle"></i>
-                <input type="range" min="0" max="2" value="1" step=".01" class="slider" id="id_contrast_slider">
+                <input id="id_contrast_slider" type="range" min="0" max="2" value="1" step=".01" class="slider">
                 <i class="bi bi-circle-half"></i>
                 <br>
-                <button type="button" class="btn btn-light" id="id_apply_image_editor_button"><i class="bi bi-check"></i>Apply</button>
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x"></i>Cancel</button>
+                <button id="id_apply_image_editor_button" type="button" class="btn btn-light"><i class="bi bi-check"></i>Apply</button>
+                <button id="id_close_image_editor_button" type="button" class="btn btn-light" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x"></i>Cancel</button>
             </div>
         </div>
     </div>
@@ -39,12 +39,12 @@
     <div class="row" id="id_body">
         <div class="col-12 col-md-2 order-2 order-md-1" id="id_thumbnails">
             <div class="overflow-auto d-flex d-md-block h-md-90vh webkit-img-container">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="id_image_1">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="id_image_2">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="id_image_3">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="id_image_4">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="id_image_5">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="id_image_6">
+                <img id="id_thumbnail_1" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_1">
+                <img id="id_thumbnail_2" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_2">
+                <img id="id_thumbnail_3" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_3">
+                <img id="id_thumbnail_4" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_4">
+                <img id="id_thumbnail_5" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_5">
+                <img id="id_thumbnail_6" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_6">
             </div>
         </div>
         <div class="col-md order-1 order-md-2" id="id_main">
@@ -53,15 +53,15 @@
                     <div class="settings-column">
                         <button id="id_zoom_in" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-in"></i></button>
                         <button id="id_zoom_out" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-out"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="collapse" data-bs-target="#id_extra_image_settings"><i class="bi bi-tools"></i></button>
+                        <button id="id_expand_settings" type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="collapse" data-bs-target="#id_extra_image_settings"><i class="bi bi-tools"></i></button>
                         <span class="settings-button"></span>
                     </div>
 
                     <div id="id_extra_image_settings" class="settings-column collapse">
                         <button id="id_rotate_left" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-left"></i></button>
                         <button id="id_rotate_right" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-right"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0" id="id_invert_button"><i class="bi bi-square-half"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="modal" data-bs-target="#id_tone_modal"><i class="bi bi-toggles"></i></button>
+                        <button id="id_invert_button" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-square-half"></i></button>
+                        <button id="id_tone_button" type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="modal" data-bs-target="#id_tone_modal"><i class="bi bi-toggles"></i></button>
                     </div>
                 </div>
 
