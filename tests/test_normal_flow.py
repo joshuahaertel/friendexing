@@ -159,14 +159,51 @@ class TestNormalFlow(TestCase):
         image_holder = driver.find_element_by_id('id_image_holder')
 
         zoom_in_elem = driver.find_element_by_id('id_zoom_in')
-        zoom_in_elem.click()
+        zoom_in_transforms = (
+            'matrix(1.5, 0, 0, 1.5, 0, 0)',
+            'matrix(2.25, 0, 0, 2.25, 0, 0)',
+            'matrix(3.375, 0, 0, 3.375, 0, 0)',
+            'matrix(5.0625, 0, 0, 5.0625, 0, 0)',
+            'matrix(7.59375, 0, 0, 7.59375, 0, 0)',
+            'matrix(11.3906, 0, 0, 11.3906, 0, 0)',
+            'matrix(17.0859, 0, 0, 17.0859, 0, 0)',
+            'matrix(25.6289, 0, 0, 25.6289, 0, 0)',
+            'matrix(38.4434, 0, 0, 38.4434, 0, 0)',
+            'matrix(38.4434, 0, 0, 38.4434, 0, 0)',
+        )
+        for zoom_in_transform in zoom_in_transforms:
+            zoom_in_elem.click()
 
-        transform = image_holder.value_of_css_property('transform')
-        self.assertEqual('matrix(1.5, 0, 0, 1.5, 0, 0)', transform)
+            transform = image_holder.value_of_css_property('transform')
+            self.assertEqual(zoom_in_transform, transform)
 
         zoom_out_elem = driver.find_element_by_id('id_zoom_out')
-        zoom_out_elem.click()
+        zoom_out_transforms = (
+            'matrix(25.6289, 0, 0, 25.6289, 0, 0)',
+            'matrix(17.0859, 0, 0, 17.0859, 0, 0)',
+            'matrix(11.3906, 0, 0, 11.3906, 0, 0)',
+            'matrix(7.59375, 0, 0, 7.59375, 0, 0)',
+            'matrix(5.0625, 0, 0, 5.0625, 0, 0)',
+            'matrix(3.375, 0, 0, 3.375, 0, 0)',
+            'matrix(2.25, 0, 0, 2.25, 0, 0)',
+            'matrix(1.5, 0, 0, 1.5, 0, 0)',
+            'matrix(1, 0, 0, 1, 0, 0)',
+            'matrix(0.666667, 0, 0, 0.666667, 0, 0)',
+            'matrix(0.444444, 0, 0, 0.444444, 0, 0)',
+            'matrix(0.296296, 0, 0, 0.296296, 0, 0)',
+            'matrix(0.197531, 0, 0, 0.197531, 0, 0)',
+            'matrix(0.131687, 0, 0, 0.131687, 0, 0)',
+            'matrix(0.0877915, 0, 0, 0.0877915, 0, 0)',
+            'matrix(0.0877915, 0, 0, 0.0877915, 0, 0)',
+        )
+        for zoom_out_transform in zoom_out_transforms:
+            zoom_out_elem.click()
 
+            transform = image_holder.value_of_css_property('transform')
+            self.assertEqual(zoom_out_transform, transform)
+
+        for _ in range(6):
+            zoom_in_elem.click()
         transform = image_holder.value_of_css_property('transform')
         self.assertEqual('matrix(1, 0, 0, 1, 0, 0)', transform)
 
