@@ -10,86 +10,90 @@
     <title>Play</title>
 </head>
 <body>
-<div id="tone_modal_id" class="modal" tabindex="-1">
+<div id="id_tone_modal" class="modal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-body">
                 <h5>Brightness</h5>
                 <i class="bi bi-brightness-alt-low-fill"></i>
-                <input type="range" min="0" max="2" value="1" step=".1" class="slider" id="brightness_slider_id">
+                <input id="id_brightness_slider" type="range" min="0" max="2" value="1" step=".01" class="slider">
                 <i class="bi bi-brightness-alt-high"></i>
 
                 <h5>Contrast</h5>
                 <i class="bi bi-circle"></i>
-                <input type="range" min="0" max="2" value="1" step=".1" class="slider" id="contrast_slider_id">
+                <input id="id_contrast_slider" type="range" min="0" max="2" value="1" step=".01" class="slider">
                 <i class="bi bi-circle-half"></i>
                 <br>
-                <button type="button" class="btn btn-light"><i class="bi bi-check"></i>Apply</button>
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x"></i>Cancel</button>
+                <button id="id_apply_image_editor_button" type="button" class="btn btn-light"><i class="bi bi-check"></i>Apply</button>
+                <button id="id_close_image_editor_button" type="button" class="btn btn-light" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x"></i>Cancel</button>
             </div>
         </div>
     </div>
 </div>
-<div class="container">
-    <div class="row" id="header">
+<div class="container-fluid">
+    <div class="row" id="id_header">
         <div class="col">
             <h1 class="text-center">Play Game!</h1>
         </div>
     </div>
-    <div class="row" id="body">
-        <div class="col-12 col-md-2 order-2 order-md-1" id="thumbnails">
-            <div class="overflow-auto d-flex d-md-block h-md-90vh">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-1">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-2">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-3">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-4">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-5">
-                <img src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" onclick="showImage(this)" data-image-id="#image-6">
+    <div class="row" id="id_body">
+        <div class="col-12 col-md-2 order-2 order-md-1" id="id_thumbnails">
+            <div class="overflow-auto d-flex d-md-block h-md-90vh webkit-img-container">
+                <img id="id_thumbnail_1" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_1">
+                <img id="id_thumbnail_2" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_2">
+                <img id="id_thumbnail_3" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_3">
+                <img id="id_thumbnail_4" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_4">
+                <img id="id_thumbnail_5" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_5">
+                <img id="id_thumbnail_6" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_6">
             </div>
         </div>
-        <div class="col-md order-1 order-md-2" id="main">
-            <div id="image-holder" class="row">
+        <div class="col-md order-1 order-md-2" id="id_main">
+            <div id="id_main_image_container" class="row">
                 <div class="settings-holder p-0">
                     <div class="settings-column">
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-in"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-out"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-tools"></i></button>
+                        <button id="id_zoom_in" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-in"></i></button>
+                        <button id="id_zoom_out" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-out"></i></button>
+                        <button id="id_expand_settings" type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="collapse" data-bs-target="#id_extra_image_settings"><i class="bi bi-tools"></i></button>
                         <span class="settings-button"></span>
                     </div>
 
-                    <div class="settings-column">
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-left"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-right"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-toggles"></i></button>
-                        <button type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="modal" data-bs-target="#tone_modal_id"><i class="bi bi-square-half"></i></button>
+                    <div id="id_extra_image_settings" class="settings-column collapse">
+                        <button id="id_rotate_left" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-left"></i></button>
+                        <button id="id_rotate_right" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-arrow-90deg-right"></i></button>
+                        <button id="id_invert_button" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-square-half"></i></button>
+                        <button id="id_tone_button" type="button" class="btn btn-dark settings-button p-0" data-bs-toggle="modal" data-bs-target="#id_tone_modal"><i class="bi bi-toggles"></i></button>
                     </div>
                 </div>
 
-                <div class="col" id="image-1">
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                </div>
-                <div class="col" id="image-2" hidden>
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                </div>
-                <div class="col" id="image-3" hidden>
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                </div>
-                <div class="col" id="image-4" hidden>
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                </div>
-                <div class="col" id="image-5" hidden>
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                </div>
-                <div class="col" id="image-6" hidden>
-                    <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                <div id="id_image_view_port" class="image-viewer">
+                    <div id="id_image_holder">
+                        <div class="col" id="id_image_1">
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                        <div class="col" id="id_image_2" hidden>
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                        <div class="col" id="id_image_3" hidden>
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                        <div class="col" id="id_image_4" hidden>
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                        <div class="col" id="id_image_5" hidden>
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                        <div class="col" id="id_image_6" hidden>
+                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col" id="input">
+                <div class="col" id="id_input">
                     <form>
                         <div class="form-group row justify-content-end">
                             <div class="col-12 col-sm-9">
-                                <input class="form-control" id="guess" type="text" placeholder="guess" required>
+                                <input class="form-control" id="id_guess" type="text" placeholder="guess" required>
                             </div>
                             <div class="col-4 col-sm-3">
                                 <button class="form-control">Submit</button>
@@ -99,10 +103,10 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-2 order-3" id="score"><p>Score</p></div>
+        <div class="col-md-2 order-3" id="id_score"><p>Score</p></div>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
-<script src="{% static 'games/play.js' %}"></script>
+<script src="{% static 'games/coverage/play.js' %}"></script>
 </body>
 </html>

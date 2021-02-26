@@ -1,3 +1,7 @@
+.webkit-img-container {
+    align-items: flex-start;
+}
+
 .modal-backdrop {
    visibility: hidden;
 }
@@ -37,13 +41,20 @@
   opacity: .75;
 }
 
+.image-viewer {
+  z-index: -1;
+  overflow: hidden;
+}
+
 .w-24 {
   width: 24%;
+  height: auto;
 }
 
 @media screen and (min-width: 768px) {
   .w-md-100 {
     width: 100%;
+    height: auto;
   }
   .h-md-90vh {
     height: 90vh;
