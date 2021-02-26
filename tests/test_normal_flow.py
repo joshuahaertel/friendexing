@@ -2,7 +2,7 @@ import logging
 import os
 from functools import partial
 from time import sleep
-from typing import Callable, Iterable
+from typing import Callable, List, Tuple
 from unittest import TestCase
 
 from selenium import webdriver
@@ -76,21 +76,51 @@ class TestNormalFlow(TestCase):
         self._join_game(self.firefox_driver, join_url_1)
         self._manipulate_images(
             self.chrome_driver,
-            rotation_matrices=(
-                'matrix(-1.83697e-16, -1, 1, -1.83697e-16, 0, 0)',
-                'matrix(-1, 1.22465e-16, -1.22465e-16, -1, 0, 0)',
-                'matrix(6.12323e-17, 1, -1, 6.12323e-17, 0, 0)',
-                'matrix(1, 0, 0, 1, 0, 0)',
-            )
+            left_transform_matrices=[
+                ('matrix(-1.83697e-16, -1, 1, -1.83697e-16, 0, 0)',
+                 'matrix(-1.83697e-16, -1, 1, -1.83697e-16, 50, 100)'),
+                ('matrix(-1, 1.22465e-16, -1.22465e-16, -1, 100, -50)',
+                 'matrix(-1, 1.22465e-16, -1.22465e-16, -1, 150, 50)'),
+                ('matrix(6.12323e-17, 1, -1, 6.12323e-17, 50, -150)',
+                 'matrix(6.12323e-17, 1, -1, 6.12323e-17, 100, -50)'),
+                ('matrix(1, 0, 0, 1, -50, -100)',
+                 'matrix(1, 0, 0, 1, 0, 0)'),
+            ],
+            right_transform_matrices=[
+                ('matrix(1, 0, 0, 1, 0, 0)',
+                 'matrix(1, 0, 0, 1, 50, 100)'),
+                ('matrix(6.12323e-17, 1, -1, 6.12323e-17, -100, 50)',
+                 'matrix(6.12323e-17, 1, -1, 6.12323e-17, -50, 150)'),
+                ('matrix(-1, 1.22465e-16, -1.22465e-16, -1, -150, -50)',
+                 'matrix(-1, 1.22465e-16, -1.22465e-16, -1, -100, 50)'),
+                ('matrix(-1.83697e-16, -1, 1, -1.83697e-16, -50, -100)',
+                 'matrix(-1.83697e-16, -1, 1, -1.83697e-16, 0, 0)'),
+            ],
+            coverage_name='chrome',
         )
         self._manipulate_images(
             self.firefox_driver,
-            rotation_matrices=(
-                'matrix(0, -1, 1, 0, 0, 0)',
-                'matrix(-1, 0, 0, -1, 0, 0)',
-                'matrix(0, 1, -1, 0, 0, 0)',
-                'matrix(1, 0, 0, 1, 0, 0)',
-            )
+            left_transform_matrices=[
+                ('matrix(0, -1, 1, 0, 0, 0)',
+                 'matrix(0, -1, 1, 0, 50, 100)'),
+                ('matrix(-1, 0, 0, -1, 100, -50)',
+                 'matrix(-1, 0, 0, -1, 150, 50)'),
+                ('matrix(0, 1, -1, 0, 50, -150)',
+                 'matrix(0, 1, -1, 0, 100, -50)'),
+                ('matrix(1, 0, 0, 1, -50, -100)',
+                 'matrix(1, 0, 0, 1, 0, 0)'),
+            ],
+            right_transform_matrices=[
+                ('matrix(1, 0, 0, 1, 0, 0)',
+                 'matrix(1, 0, 0, 1, 50, 100)'),
+                ('matrix(0, 1, -1, 0, -100, 50)',
+                 'matrix(0, 1, -1, 0, -50, 150)'),
+                ('matrix(-1, 0, 0, -1, -150, -50)',
+                 'matrix(-1, 0, 0, -1, -100, 50)'),
+                ('matrix(0, -1, 1, 0, -50, -100)',
+                 'matrix(0, -1, 1, 0, 0, 0)'),
+            ],
+            coverage_name='firefox',
         )
 
     def _create_game(self, driver: WebDriver) -> str:
@@ -122,8 +152,10 @@ class TestNormalFlow(TestCase):
     def _manipulate_images(
             self,
             driver: WebDriver,
-            rotation_matrices: Iterable[str],
-    ):
+            left_transform_matrices: List[Tuple[str, str]],
+            right_transform_matrices: List[Tuple[str, str]],
+            coverage_name: str,
+    ) -> None:
         image_holder = driver.find_element_by_id('id_image_holder')
 
         zoom_in_elem = driver.find_element_by_id('id_zoom_in')
@@ -145,20 +177,59 @@ class TestNormalFlow(TestCase):
         expand_settings_elem.click()
         self.assertTrue(settings_elem.is_displayed())
 
+        main_image_container = driver.find_element_by_id(
+            'id_main_image_container',
+        )
         rotate_left_elem = driver.find_element_by_id('id_rotate_left')
-        for rotation_matrix in rotation_matrices:
+        for rotation_matrix, translation_matrix in left_transform_matrices:
             rotate_left_elem.click()
 
             transform = image_holder.value_of_css_property('transform')
             self.assertEqual(rotation_matrix, transform)
+
+            drag_image = ActionChains(driver)
+            drag_image.move_to_element_with_offset(
+                to_element=main_image_container,
+                xoffset=57,
+                yoffset=91,
+            )
+            drag_image.click_and_hold()
+            drag_image.move_to_element_with_offset(
+                to_element=main_image_container,
+                xoffset=107,
+                yoffset=191,
+            )
+            drag_image.release()
+            drag_image.perform()
+
+            transform = image_holder.value_of_css_property('transform')
+            self.assertEqual(translation_matrix, transform)
         rotate_left_elem.click()
 
         rotate_right_elem = driver.find_element_by_id('id_rotate_right')
-        for rotation_matrix in reversed(rotation_matrices):
+        for rotation_matrix, translation_matrix in right_transform_matrices:
             rotate_right_elem.click()
 
             transform = image_holder.value_of_css_property('transform')
             self.assertEqual(rotation_matrix, transform)
+
+            drag_image = ActionChains(driver)
+            drag_image.move_to_element_with_offset(
+                to_element=main_image_container,
+                xoffset=57,
+                yoffset=91,
+            )
+            drag_image.click_and_hold()
+            drag_image.move_to_element_with_offset(
+                to_element=main_image_container,
+                xoffset=107,
+                yoffset=191,
+            )
+            drag_image.release()
+            drag_image.perform()
+
+            transform = image_holder.value_of_css_property('transform')
+            self.assertEqual(translation_matrix, transform)
         rotate_right_elem.click()
 
         image_view_port_element = driver.find_element_by_id(
@@ -242,34 +313,13 @@ class TestNormalFlow(TestCase):
         expand_settings_elem.click()
         wait = WebDriverWait(driver, timeout=5)
 
-        def extra_image_settings_not_displayed(new_driver: WebDriver):
+        def extra_image_settings_not_displayed(new_driver: WebDriver) -> bool:
             extra_image_settings = new_driver.find_element_by_id(
                 'id_extra_image_settings',
             )
             return not extra_image_settings.is_displayed()
 
         wait.until(extra_image_settings_not_displayed)
-
-        main_image_container = driver.find_element_by_id(
-            'id_main_image_container',
-        )
-        drag_image = ActionChains(driver)
-        drag_image.move_to_element_with_offset(
-            to_element=main_image_container,
-            xoffset=28,
-            yoffset=90,
-        )
-        drag_image.click_and_hold()
-        drag_image.move_to_element_with_offset(
-            to_element=main_image_container,
-            xoffset=128,
-            yoffset=190,
-        )
-        drag_image.release()
-        drag_image.perform()
-
-        transform = image_holder.value_of_css_property('transform')
-        self.assertEqual('matrix(1, 0, 0, 1, 100, 100)', transform)
 
         image_1_elem = driver.find_element_by_id('id_image_1')
         image_2_elem = driver.find_element_by_id('id_image_2')
@@ -284,3 +334,10 @@ class TestNormalFlow(TestCase):
         thumbnail_2_elem.click()
         self.assertFalse(image_1_elem.is_displayed())
         self.assertTrue(image_2_elem.is_displayed())
+        json_coverage = driver.execute_script(
+            'return JSON.stringify(window.__coverage__);',
+        )
+        with open(
+                f'/opt/friendexing/tests/coverage_{coverage_name}.json', 'w'
+        ) as json_file:
+            json_file.write(json_coverage)
