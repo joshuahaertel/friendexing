@@ -24,7 +24,6 @@ from django.urls import path, include
 
 urlpatterns = [  # noqa: F841
     path('games/', include('games.urls')),
-    path('admin/', admin.site.urls),
 ]
 
 if os.getenv('ENABLE_EXTRA'):  # pragma: no cover
