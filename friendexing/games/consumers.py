@@ -19,6 +19,10 @@ class PlayConsumer(AsyncWebsocketConsumer):
         )
 
         await self.accept()
+        await self.send(text_data=json.dumps({
+            'answer': None,
+            'scores': [{'name': 'joseph', 'score': 432}],
+        }))
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
@@ -87,7 +91,10 @@ class AdminConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'correct_answer',
                 'answer': text_data_json['correct_answer'],
-                'scores': [],
+                'scores': [
+                    {'name': 'steve', 'score': 34},
+                    {'name': 'Ryan', 'score': 4321},
+                ],
             }
         )
 
@@ -100,6 +107,11 @@ class AdminConsumer(AsyncWebsocketConsumer):
             'elapsed_time': elapsed_time,
         }))
 
+    async def correct_answer(self, event):
+        answer = event['answer']
+        scores = event['scores']
 
-class AConsumer(AsyncWebsocketConsumer):
-    pass
+        await self.send(text_data=json.dumps({
+            'answer': answer,
+            'scores': scores,
+        }))
