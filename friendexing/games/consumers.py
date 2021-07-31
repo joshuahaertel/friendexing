@@ -72,6 +72,7 @@ class AdminConsumer(AsyncWebsocketConsumer):
         )
 
         await self.accept()
+        # TODO: send state (current answers, new guess, etc.)
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
