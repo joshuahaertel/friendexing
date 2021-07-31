@@ -10,12 +10,20 @@ function getSocket() {
   );
 
   const scores = document.getElementById('id_scores');
+  const answers = document.getElementById('id_answers')
   socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
-    scores.innerHTML = "";
-    data.scores.forEach(function(score) {
-      scores.innerHTML += '<p>' + score.score + ' - ' + score.name + '</p>';
-    })
+    if (data.type === 'correct_answer') {
+      scores.innerHTML = '';
+      answers.innerHTML = '';
+      data.scores.forEach(function(score) {
+        scores.innerHTML += '<p>' + score.score + ' - ' + score.name + '</p>';
+      })
+    } else if (data.type === 'new_guess') {
+      answers.innerHTML += '<p>' + data.name + ' - ' + data.guess + ' - ' + data.elapsed_time + '</p>';
+    } else {
+      console.error("Unexpected socket reply: " + event.data)
+    }
   }
 
   socket.onclose = function(e) {

@@ -103,6 +103,8 @@ class AdminConsumer(AsyncWebsocketConsumer):
         elapsed_time = event['elapsed_time']
 
         await self.send(text_data=json.dumps({
+            'type': 'new_guess',
+            'name': 'gus',
             'guess': guess,
             'elapsed_time': elapsed_time,
         }))
@@ -112,6 +114,7 @@ class AdminConsumer(AsyncWebsocketConsumer):
         scores = event['scores']
 
         await self.send(text_data=json.dumps({
+            'type': 'correct_answer',
             'answer': answer,
             'scores': scores,
         }))
