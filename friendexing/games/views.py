@@ -43,7 +43,10 @@ def game_view(request: HttpRequest, game_id: UUID) -> HttpResponse:
     game_id_str = str(game_id)
     player_id = request.COOKIES.get(game_id_str)
     if player_id:
-        response = render(request, 'games/play.html')
+        if request.GET.get('isAdmin', '') == '1':
+            response = render(request, 'games/admin.html')
+        else:
+            response = render(request, 'games/play.html')
         response.set_cookie(
             key=game_id_str,
             value=player_id,
