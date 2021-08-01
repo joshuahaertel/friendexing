@@ -1,8 +1,11 @@
 const gameId = window.location.pathname.split("/")[2]
 
+const wsScheme = window.location.protocol == "https:" ? "wss://" : "ws://";
+
 function getSocket() {
+
   const socket = new WebSocket(
-    'ws://'
+    wsScheme
     + window.location.host
     + '/ws/admin/'
     + gameId

@@ -18,9 +18,11 @@ function getCookie(name) {
 
 const playerId = getCookie(gameId);
 
+const wsScheme = window.location.protocol == "https:" ? "wss://" : "ws://";
+
 function getSocket() {
   const playerSocket = new WebSocket(
-    'ws://'
+    wsScheme
     + window.location.host
     + '/ws/play/'
     + gameId
@@ -52,23 +54,4 @@ const submitButton = document.getElementById('id_submit');
 const guessTextBox = document.getElementById('id_guess');
 submitButton.onclick = function(event) {
   playerSocket.send(JSON.stringify({guess: guessTextBox.value, elapsed_time: 10}))
-}
-
-function far() {
-    let adminSocket = new WebSocket(
-        'ws://'
-        + window.location.host
-        + '/ws/admin/'
-        + '8d5ade3a-d494-4fbd-90ec-db1605b2b977'
-        + '/'
-    );
-
-    adminSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        console.log(data)
-    };
-
-    adminSocket.onclose = function(e) {
-        console.error('Socket closed unexpectedly');
-    };
 }

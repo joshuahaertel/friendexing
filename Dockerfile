@@ -10,6 +10,18 @@ RUN pip install -r requirements.txt
 FROM base as web
 WORKDIR /opt/friendexing/friendexing
 
+# DOCKER_BUILDKIT=1 docker build --target heroku . -t registry.heroku.com/friendexing/web
+# docker push registry.heroku.com/friendexing/web
+# This does not work with staged builds: heroku container:push web
+# heroku container:release web -a friendexing
+FROM web as heroku
+RUN apk add curl
+RUN pip install whitenoise[brotli]
+COPY friendexing/ /opt/friendexing/friendexing/
+ENV DJANGO_SETTINGS_MODULE=configuration.settings.heroku
+RUN SECRET_KEY=jk REDIS_TLS_URL= python manage.py collectstatic
+CMD python manage.py runserver 0.0.0.0:${PORT}
+
 # DOCKER_BUILDKIT=1 docker build --target coverage . -t friendexing_coverage
 FROM web as coverage
 RUN pip install coverage
