@@ -54,7 +54,10 @@ class PlayConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
         guess = text_data_json['guess']
+        # Calculate elapsed time
         elapsed_time = text_data_json['elapsed_time']
+        # save guess
+        # publish new guess for admin
 
         await self.channel_layer.group_send(
             self.admin_group_id,
@@ -118,6 +121,9 @@ class AdminConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
+        # Go through each player
+        # calculate score
+        # publish new scores
 
         await self.channel_layer.group_send(
             self.game_id,
@@ -132,6 +138,7 @@ class AdminConsumer(AsyncWebsocketConsumer):
         )
 
     async def new_guess(self, event):
+        # Get all guesses, send aggregate
         guess = event['guess']
         elapsed_time = event['elapsed_time']
 

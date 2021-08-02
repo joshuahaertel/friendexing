@@ -2,7 +2,6 @@ from typing import Optional
 
 import aioredis
 from aioredis import Redis
-from asgiref.sync import async_to_sync
 from django.conf import settings
 
 from games.constants import GAME_EXPIRY_SECONDS, TOP_PLAYER_INDEX
@@ -95,17 +94,17 @@ class GameRedisORM(RedisORM):
         })
         await redis_pool.expire(game_state_key, GAME_EXPIRY_SECONDS)
 
-    save_sync = async_to_sync(save)
-
     @classmethod
-    @async_to_sync
     async def get_game_state(cls, game_id) -> Optional[State]:
-        redis_pool = await cls.get_redis_pool(None)
+        print('getting game state')
+        redis_pool = await cls.get_redis_pool()
+        print('got redis pool', redis_pool)
         values = await redis_pool.hmget(
             f'state:{game_id}',
             'phase',
             'admin_id',
         )
+        print('got values', values)
         phase = values[0]
         if phase is None:
             return None
@@ -115,7 +114,6 @@ class GameRedisORM(RedisORM):
         )
 
     @classmethod
-    @async_to_sync
     async def add_player(cls, game_id, player):
         redis_pool = await cls.get_redis_pool()
         await PlayerRedisORM(player).save()
@@ -166,8 +164,6 @@ class PlayerRedisORM(RedisORM):
         }
         await redis_pool.hmset_dict(player_key, redis_player_dict)
         await redis_pool.expire(player_key, GAME_EXPIRY_SECONDS)
-
-    save_sync = async_to_sync(save)
 
     @classmethod
     async def get_player_score(cls, player_id, redis_pool=None):

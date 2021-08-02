@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional, Any, Dict
 from uuid import UUID
 
+from asgiref.sync import AsyncToSync
 from django.forms import BaseForm
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect
@@ -33,7 +34,8 @@ class GameCreate(FormView):
             value=str(game.players[0].id),
             expires=get_expiry(),
         )
-        GameRedisORM(game).save_sync()
+        save_sync = AsyncToSync(GameRedisORM(game).save)
+        save_sync()
         return response
 
     def get_success_url(self) -> str:
@@ -43,15 +45,20 @@ class GameCreate(FormView):
 
 @csrf_protect
 def game_view(request: HttpRequest, game_id: UUID) -> HttpResponse:
+    print('entered game view')
     game_id_str = str(game_id)
     player_id = request.COOKIES.get(game_id_str)
     if player_id:
-        game_info: Optional[State] = GameRedisORM.get_game_state(game_id_str)
-        if game_info is None:
+        print('got player id')
+        get_game_state = AsyncToSync(GameRedisORM.get_game_state)
+        game_state: Optional[State] = get_game_state(game_id_str)
+        print('got state', game_state)
+        if game_state is None:
             # todo: notify game expired
             return redirect(f'/games/create/')
         else:
-            if player_id == game_info.admin_id:
+            if player_id == game_state.admin_id:
+                print('rendering admin')
                 response = render(request, 'games/admin.html')
             else:
                 # todo: check that player in list
@@ -80,7 +87,8 @@ class PlayerCreate(FormView):
             value=str(player.id),
             expires=get_expiry(),
         )
-        GameRedisORM.add_player(game_id, player)
+        add_player_sync = AsyncToSync(GameRedisORM.add_player)
+        add_player_sync(game_id, player)
         return response
 
     def get_context_data(self, **kwargs: Dict['str', Any]) -> Dict[str, Any]:

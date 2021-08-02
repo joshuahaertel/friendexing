@@ -17,6 +17,7 @@ services:
     environment:
       - REDIS_TLS_URL=redis://redis
       - "SECRET_KEY=d!2^(l8ke+6s02qv2b*5&%q7+-gz#p!(9pds&+fow1rh(%g&&z"
+      - PYTHONASYNCIODEBUG=1
 
 # COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build test
   test:
