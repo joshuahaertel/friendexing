@@ -5,8 +5,9 @@ from aioredis import Redis
 from asgiref.sync import async_to_sync
 from django.conf import settings
 
-from games.constants import GAME_EXPIRY_SECONDS
-from games.models import Game, Player, Info
+from games.constants import GAME_EXPIRY_SECONDS, TOP_PLAYER_INDEX
+from games.helper_models import PlayerScore
+from games.models import Game, Player, State
 
 
 class RedisORM:
@@ -46,7 +47,7 @@ class GameRedisORM(RedisORM):
         await self.save_settings(game, game_id, redis_pool)
         await self.save_players(game, game_id, redis_pool)
         # await self.save_batches(game, game_id, redis_pool)
-        await self.save_info(game, game_id, redis_pool)
+        await self.save_state(game, game_id, redis_pool)
 
     @staticmethod
     async def save_settings(game, game_id, redis_pool):
@@ -85,31 +86,31 @@ class GameRedisORM(RedisORM):
         await redis_pool.expire(batch_key, GAME_EXPIRY_SECONDS)
 
     @staticmethod
-    async def save_info(game, game_id, redis_pool):
-        info = game.info
-        game_info_key = f'game-info:{game_id}'
-        await redis_pool.hmset_dict(game_info_key, {
-            'state': info.state,
-            'admin_id': str(info.admin_id),
+    async def save_state(game, game_id, redis_pool):
+        state = game.state
+        game_state_key = f'state:{game_id}'
+        await redis_pool.hmset_dict(game_state_key, {
+            'phase': state.phase,
+            'admin_id': str(state.admin_id),
         })
-        await redis_pool.expire(game_info_key, GAME_EXPIRY_SECONDS)
+        await redis_pool.expire(game_state_key, GAME_EXPIRY_SECONDS)
 
     save_sync = async_to_sync(save)
 
     @classmethod
     @async_to_sync
-    async def get_game_info(cls, game_id) -> Optional[Info]:
+    async def get_game_state(cls, game_id) -> Optional[State]:
         redis_pool = await cls.get_redis_pool(None)
         values = await redis_pool.hmget(
-            f'game-info:{game_id}',
-            'state',
+            f'state:{game_id}',
+            'phase',
             'admin_id',
         )
-        state = values[0]
-        if state is None:
+        phase = values[0]
+        if phase is None:
             return None
-        return Info(
-            state=state,
+        return State(
+            phase=phase,
             admin_id=values[1],
         )
 
@@ -121,6 +122,24 @@ class GameRedisORM(RedisORM):
         players_key = f'players:{game_id}'
         await redis_pool.zadd(players_key, player.score, str(player.id))
         await redis_pool.expire(players_key, GAME_EXPIRY_SECONDS)
+
+    @classmethod
+    async def get_top_player_scores(cls, game_id):
+        return await cls.get_player_scores(game_id, stop=TOP_PLAYER_INDEX)
+
+    @classmethod
+    async def get_player_scores(cls, game_id, stop=-1):
+        redis_pool = await cls.get_redis_pool()
+        players_key = f'players:{game_id}'
+        top_player_ids = await redis_pool.zrevrange(
+            players_key,
+            start=0,
+            stop=stop,
+        )
+        return [
+            await PlayerRedisORM.get_player_score(player_id, redis_pool)
+            for player_id in top_player_ids
+        ]
 
 
 class PlayerRedisORM(RedisORM):
@@ -149,6 +168,21 @@ class PlayerRedisORM(RedisORM):
         await redis_pool.expire(player_key, GAME_EXPIRY_SECONDS)
 
     save_sync = async_to_sync(save)
+
+    @classmethod
+    async def get_player_score(cls, player_id, redis_pool=None):
+        player_key = f'player:{player_id}'
+        redis_pool = await cls.get_redis_pool(redis_pool)
+        results = await redis_pool.hmget(
+            player_key,
+            'name',
+            'score',
+        )
+        return PlayerScore(
+            name=results[0],
+            score=results[1],
+            player_id=player_id
+        )
 
 
 class BatchRedisORM(RedisORM):

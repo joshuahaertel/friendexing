@@ -37,9 +37,14 @@ function getSocket() {
     const data = JSON.parse(event.data);
     previousAnswer.innerText = data.answer;
     scores.innerHTML = "";
-    data.scores.forEach(function(score) {
-      scores.innerHTML += '<p>' + score.score + ' - ' + score.name + '</p>';
+    const scoresList = data.scores.slice(0, data.numTopPlayers)
+    scoresList.forEach(function(score, index) {
+      scores.innerHTML += '<p>' + (index + 1) + '. ' + score.name + ' - ' + score.score + '</p>';
     })
+    if (scoresList.length > data.num_top_players) {
+      scores.innerHTML += '<p>...</p>';
+      scores.innerHTML += '<p>' + score.name + ' - ' + score.score + '</p>';
+    }
   }
 
   playerSocket.onclose = function(e) {

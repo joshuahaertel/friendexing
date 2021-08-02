@@ -11,7 +11,7 @@ from django.views.generic import FormView
 
 from games.constants import GAME_EXPIRY_DELTA
 from games.forms import GameForm, PlayerForm
-from games.models import Game, Info
+from games.models import Game, State
 from games.orm import GameRedisORM
 
 
@@ -46,10 +46,10 @@ def game_view(request: HttpRequest, game_id: UUID) -> HttpResponse:
     game_id_str = str(game_id)
     player_id = request.COOKIES.get(game_id_str)
     if player_id:
-        game_info: Optional[Info] = GameRedisORM.get_game_info(game_id_str)
+        game_info: Optional[State] = GameRedisORM.get_game_state(game_id_str)
         if game_info is None:
-            # todo: make this html
-            return HttpResponse(content=b'error, try refreshing cookies')
+            # todo: notify game expired
+            return redirect(f'/games/create/')
         else:
             if player_id == game_info.admin_id:
                 response = render(request, 'games/admin.html')

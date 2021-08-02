@@ -2,26 +2,47 @@ import json
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+from games.constants import NUM_TOP_PLAYERS
+from games.orm import GameRedisORM, PlayerRedisORM
+
 
 class PlayConsumer(AsyncWebsocketConsumer):
+    game_id: str
     game_group_id: str
     admin_group_id: str
     player_id: str
 
     async def connect(self):
-        self.game_group_id = str(self.scope['url_route']['kwargs']['game_id'])
+        self.game_id = str(self.scope['url_route']['kwargs']['game_id'])
+        self.game_group_id = self.game_id
         self.player_id = str(self.scope['url_route']['kwargs']['player_id'])
         self.admin_group_id = f'admin_{self.game_group_id}'
 
         await self.channel_layer.group_add(
             self.game_group_id,
-            self.channel_name
+            self.channel_name,
         )
-
         await self.accept()
+        await self.send_scores()
+
+    async def send_scores(self):
+        top_players = await GameRedisORM.get_top_player_scores(self.game_id)
+        for top_player in top_players:
+            if top_player.player_id == self.player_id:
+                break
+        else:
+            player_score = await PlayerRedisORM.get_player_score(
+                self.player_id,
+            )
+            top_players.append(player_score)
         await self.send(text_data=json.dumps({
+            'type': 'scores',
+            'num_top_players': NUM_TOP_PLAYERS,
             'answer': None,
-            'scores': [{'name': 'joseph', 'score': 432}],
+            'scores': [
+                top_player.serialize_as_json()
+                for top_player in top_players
+            ],
         }))
 
     async def disconnect(self, close_code):
@@ -72,7 +93,18 @@ class AdminConsumer(AsyncWebsocketConsumer):
         )
 
         await self.accept()
-        # TODO: send state (current answers, new guess, etc.)
+        await self.send_scores()
+
+    async def send_scores(self):
+        all_scores = await GameRedisORM.get_player_scores(self.game_id)
+        await self.send(text_data=json.dumps({
+            'type': 'scores',
+            'answer': None,
+            'scores': [
+                player_score.serialize_as_json()
+                for player_score in all_scores
+            ],
+        }))
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(

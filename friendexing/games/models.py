@@ -18,8 +18,8 @@ class Game:
         admin = Player(name)
         self.players: List['Player'] = [admin]
         self.batches: List['Batch'] = []
-        self.info = Info(
-            state='wait',
+        self.state = State(
+            phase='wait',
             admin_id=admin.id,
         )
 
@@ -70,11 +70,11 @@ class Field:
     is_checked: bool
 
 
-class Info:
+class State:
     def __init__(
             self,
-            state,
+            phase,
             admin_id,
     ):
-        self.state = state
+        self.phase = phase
         self.admin_id = admin_id

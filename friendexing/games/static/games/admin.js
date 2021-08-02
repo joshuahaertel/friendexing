@@ -24,6 +24,11 @@ function getSocket() {
       })
     } else if (data.type === 'new_guess') {
       answers.innerHTML += '<p>' + data.name + ' - ' + data.guess + ' - ' + data.elapsed_time + '</p>';
+    } else if (data.type === 'scores') {
+      scores.innerHTML = "";
+      data.scores.forEach(function(score, index) {
+        scores.innerHTML += '<p>' + (index + 1) + '. ' + score.name + ' - ' + score.score + '</p>';
+      })
     } else {
       console.error("Unexpected socket reply: " + event.data)
     }
