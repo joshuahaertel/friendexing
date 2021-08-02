@@ -11,7 +11,7 @@ from django.views.generic import FormView
 
 from games.constants import GAME_EXPIRY_DELTA
 from games.forms import GameForm, PlayerForm
-from games.models import Game
+from games.models import Game, Info
 from games.orm import GameRedisORM
 
 
@@ -46,10 +46,16 @@ def game_view(request: HttpRequest, game_id: UUID) -> HttpResponse:
     game_id_str = str(game_id)
     player_id = request.COOKIES.get(game_id_str)
     if player_id:
-        if request.GET.get('isAdmin', '') == '1':
-            response = render(request, 'games/admin.html')
+        game_info: Optional[Info] = GameRedisORM.get_game_info(game_id_str)
+        if game_info is None:
+            # todo: make this html
+            return HttpResponse(content=b'error, try refreshing cookies')
         else:
-            response = render(request, 'games/play.html')
+            if player_id == game_info.admin_id:
+                response = render(request, 'games/admin.html')
+            else:
+                # todo: check that player in list
+                response = render(request, 'games/play.html')
         response.set_cookie(
             key=game_id_str,
             value=player_id,
@@ -68,11 +74,13 @@ class PlayerCreate(FormView):
         assert isinstance(form, PlayerForm)
         player = form.create_player()
         response = super().form_valid(form)
+        game_id = str(self.kwargs['game_id'])
         response.set_cookie(
-            key=str(self.kwargs['game_id']),
+            key=game_id,
             value=str(player.id),
             expires=get_expiry(),
         )
+        GameRedisORM.add_player(game_id, player)
         return response
 
     def get_context_data(self, **kwargs: Dict['str', Any]) -> Dict[str, Any]:

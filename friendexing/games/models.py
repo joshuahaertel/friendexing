@@ -15,14 +15,13 @@ class Game:
             total_time_to_guess,
             should_randomize_fields,
         )
-        self.players: List['Player'] = [
-            Player(
-                name,
-            ),
-        ]
+        admin = Player(name)
+        self.players: List['Player'] = [admin]
         self.batches: List['Batch'] = []
-        self.state = 'wait'
-        self.admin_id = self.players[0].id
+        self.info = Info(
+            state='wait',
+            admin_id=admin.id,
+        )
 
 
 class Settings:
@@ -69,3 +68,13 @@ class Field:
     id: UUID
     value: str
     is_checked: bool
+
+
+class Info:
+    def __init__(
+            self,
+            state,
+            admin_id,
+    ):
+        self.state = state
+        self.admin_id = admin_id
