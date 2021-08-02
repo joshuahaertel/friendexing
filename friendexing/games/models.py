@@ -1,5 +1,5 @@
 from typing import List, Dict, Optional
-from uuid import UUID, uuid4
+from uuid import uuid4, UUID
 
 
 class Game:
@@ -22,6 +22,7 @@ class Game:
         ]
         self.batches: List['Batch'] = []
         self.state = 'wait'
+        self.admin_id = self.players[0].id
 
 
 class Settings:
@@ -48,19 +49,23 @@ class Player:
 
 
 class Batch:
+    id: UUID
     images: List['Image']
     schema: Dict[str, type]
 
 
 class Image:
+    id: UUID
     indexable: bool
     records: List['Record']
 
 
 class Record:
+    id: UUID
     fields: Dict[str, 'Field']
 
 
 class Field:
+    id: UUID
     value: str
     is_checked: bool

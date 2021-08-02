@@ -6,15 +6,17 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['friendexing.herokuapp.com']
 
+REDIS_CONFIGURATION = {
+    'address': REDIS_URL,
+    'ssl': ssl._create_unverified_context(),
+}
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             'hosts': [
-                {
-                    'address': os.environ['REDIS_TLS_URL'],
-                    'ssl': ssl._create_unverified_context(),
-                }
+                REDIS_CONFIGURATION
             ],
         },
     },

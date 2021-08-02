@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import datetime
 from typing import Optional, Any, Dict
 from uuid import UUID
 
@@ -9,12 +9,14 @@ from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import FormView
 
+from games.constants import GAME_EXPIRY_DELTA
 from games.forms import GameForm, PlayerForm
 from games.models import Game
+from games.orm import GameRedisORM
 
 
 def get_expiry() -> datetime:
-    return now() + timedelta(hours=2)
+    return now() + GAME_EXPIRY_DELTA
 
 
 class GameCreate(FormView):
@@ -24,13 +26,14 @@ class GameCreate(FormView):
 
     def form_valid(self, form: BaseForm) -> HttpResponse:
         assert isinstance(form, GameForm)
-        self.game = form.create_game()
+        self.game = game = form.create_game()
         response = super().form_valid(form)
         response.set_cookie(
-            key=str(self.game.id),
-            value=str(self.game.players[0].id),
+            key=str(game.id),
+            value=str(game.players[0].id),
             expires=get_expiry(),
         )
+        GameRedisORM(game).save_sync()
         return response
 
     def get_success_url(self) -> str:
