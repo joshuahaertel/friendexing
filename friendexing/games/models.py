@@ -38,13 +38,19 @@ class Player:
     def __init__(
             self,
             name: str,
+            id_=None,
+            score=0,
+            guess_id='',
+            guess='',
+            potential_points=0,
     ):
-        self.id = uuid4()
+        self.id = id_ or uuid4()
         self.name: str = name
-        self.score = 0
-        self.guess_id: Optional[int] = None
-        self.guess: Optional[str] = None
-        self.guess_time: Optional[int] = None
+        self.score = score
+        # todo: need this?
+        self.guess_id: str = guess_id
+        self.guess: str = guess
+        self.potential_points: int = potential_points
 
 
 class Batch:
@@ -78,3 +84,4 @@ class State:
     ):
         self.phase = phase
         self.admin_id = admin_id
+        self.guess_end_time: Optional[float] = None

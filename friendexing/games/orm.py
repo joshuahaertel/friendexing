@@ -139,6 +139,55 @@ class GameRedisORM(RedisORM):
             for player_id in top_player_ids
         ]
 
+    @classmethod
+    async def get_guess_end_time(cls, game_id) -> float:
+        redis_pool = await cls.get_redis_pool()
+        state_key = f'state:{game_id}'
+        return await redis_pool.hget(
+            state_key,
+            'guess_end_time',
+        )
+
+    @classmethod
+    async def add_guess(cls, game_id, guess):
+        redis_pool = await cls.get_redis_pool()
+        guesses_key = f'guesses:{game_id}'
+        await redis_pool.zincrby(guesses_key, 1, guess)
+
+    @classmethod
+    async def get_guesses(cls, game_id):
+        redis_pool = await cls.get_redis_pool()
+        guesses_key = f'guesses:{game_id}'
+        scores_list = await redis_pool.zrevrange(
+            guesses_key,
+            start=0,
+            stop=-1,
+            withscores=True,
+        )
+        return [
+            (scores_list[index], scores_list[index + 1])
+            for index in range(0, len(scores_list), 2)
+        ]
+
+    @classmethod
+    async def player_iterator(cls, game_id):
+        redis_pool = await cls.get_redis_pool()
+        players_key = f'players:{game_id}'
+        player_ids = await redis_pool.zrange(players_key)
+        for player_id in player_ids:
+            player = await PlayerRedisORM.get_player(player_id, redis_pool)
+            if player:
+                yield player
+
+    @classmethod
+    async def set_player_scores(cls, game_id, player_scores):
+        redis_pool = await cls.get_redis_pool()
+        players_key = f'players:{game_id}'
+        redis_pool.zadd(
+            players_key,
+            *player_scores,
+        )
+
 
 class PlayerRedisORM(RedisORM):
     obj: Player
@@ -155,14 +204,9 @@ class PlayerRedisORM(RedisORM):
             'score': player.score,
             'guess_id': player.guess_id,
             'guess': player.guess,
-            'guess_time': player.guess_time,
+            'potential_points': player.potential_points,
         }
-        redis_player_dict = {
-            key: value
-            for key, value in player_dict.items()
-            if value is not None
-        }
-        await redis_pool.hmset_dict(player_key, redis_player_dict)
+        await redis_pool.hmset_dict(player_key, player_dict)
         await redis_pool.expire(player_key, GAME_EXPIRY_SECONDS)
 
     @classmethod
@@ -178,6 +222,29 @@ class PlayerRedisORM(RedisORM):
             name=results[0],
             score=results[1],
             player_id=player_id
+        )
+
+    @classmethod
+    async def get_player(cls, player_id, redis_pool):
+        player_key = f'player:{player_id}'
+        results = await redis_pool.hmget(
+            player_key,
+            'name',
+            'score',
+            'guess_id',
+            'guess',
+            'potential_points',
+        )
+        name = results[0]
+        if name is None:
+            return None
+        return Player(
+            id_=player_id,
+            name=name,
+            score=results[1],
+            guess_id=results[2],
+            guess=results[3],
+            potential_points=results[4],
         )
 
 
