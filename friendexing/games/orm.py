@@ -148,6 +148,12 @@ class GameRedisORM(RedisORM):
         await redis_pool.zincrby(guesses_key, 1, guess)
 
     @classmethod
+    async def remove_guess(cls, game_id, old_guess):
+        redis_pool = await cls.get_redis_pool()
+        guesses_key = f'guesses:{game_id}'
+        await redis_pool.zincrby(guesses_key, -1, old_guess)
+
+    @classmethod
     async def get_guesses(cls, game_id):
         redis_pool = await cls.get_redis_pool()
         guesses_key = f'guesses:{game_id}'
@@ -192,6 +198,12 @@ class GameRedisORM(RedisORM):
         )
         await redis_pool.expire(game_state_key, GAME_EXPIRY_SECONDS)
 
+    @classmethod
+    async def clear_guesses(cls, game_id):
+        redis_pool = await cls.get_redis_pool()
+        guesses_key = f'guesses:{game_id}'
+        await redis_pool.delete(guesses_key)
+
 
 class PlayerRedisORM(RedisORM):
     obj: Player
@@ -229,7 +241,8 @@ class PlayerRedisORM(RedisORM):
         )
 
     @classmethod
-    async def get_player(cls, player_id, redis_pool):
+    async def get_player(cls, player_id, redis_pool=None):
+        redis_pool = await cls.get_redis_pool(redis_pool)
         player_key = f'player:{player_id}'
         results = await redis_pool.hmget(
             player_key,

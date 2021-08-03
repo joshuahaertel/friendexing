@@ -73,15 +73,21 @@ class PlayConsumer(AsyncWebsocketConsumer):
             return
 
         raw_guess: str = text_data_json['guess']
-        # todo: prevent duplicate sending of the same answer
         # todo: lower score of previous answer
         cleaned_guess = raw_guess.strip().lower()
+        player = await PlayerRedisORM.get_player(self.player_id)
+        old_guess = player.guess
+        if old_guess == cleaned_guess:
+            # duplicate send, don't change anything
+            return
         await PlayerRedisORM.save_guess(
             self.player_id,
             cleaned_guess,
             potential_score_delta,
         )
         await GameRedisORM.add_guess(self.game_id, cleaned_guess)
+        if old_guess:
+            await GameRedisORM.remove_guess(self.game_id, old_guess)
 
         await self.channel_layer.group_send(
             self.admin_group_id,
@@ -164,7 +170,7 @@ class AdminConsumer(AsyncWebsocketConsumer):
                 player_scores.append(player.id)
                 await PlayerRedisORM(player).save()
             await GameRedisORM.set_player_scores(self.game_id, player_scores)
-            # todo: clean guesses
+            await GameRedisORM.clear_guesses(self.game_id)
 
             await self.channel_layer.group_send(
                 self.game_id,
