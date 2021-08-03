@@ -1,8 +1,9 @@
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Optional, Any, Dict
 from uuid import UUID
 
-from asgiref.sync import AsyncToSync
 from channels.layers import get_channel_layer
 from django.forms import BaseForm
 from django.http import HttpRequest, HttpResponse
@@ -19,6 +20,24 @@ from games.orm import GameRedisORM, PlayerRedisORM
 
 def get_expiry() -> datetime:
     return now() + GAME_EXPIRY_DELTA
+
+
+class AsyncToSync:
+    _call_cache = {}
+
+    def __init__(self, callable_):
+        self.callable_ = callable_
+        if callable_ not in self._call_cache:
+            self._call_cache[callable_] = ThreadPoolExecutor(max_workers=1)
+        self.executor: ThreadPoolExecutor = self._call_cache[callable_]
+        self.event_loop = asyncio.new_event_loop()
+
+    def __call__(self, *args, **kwargs):
+        future = self.executor.submit(
+            self.event_loop.run_until_complete,
+            self.callable_(*args, **kwargs),
+        )
+        return future.result()
 
 
 class GameCreate(FormView):
@@ -77,11 +96,26 @@ class PlayerCreate(FormView):
     template_name = 'games/join.html'  # noqa: F841
     form_class = PlayerForm  # noqa: F841
 
+    def get(self, request, *args, **kwargs):
+        game_id = str(self.kwargs['game_id'])
+        verify_game_exists = AsyncToSync(GameRedisORM.verify_game_exists)
+        game_exists = verify_game_exists(game_id)
+        if not game_exists:
+            # todo: notify game expired
+            return redirect(f'/games/create/')
+        return super().get(request, *args, **kwargs)
+
     def form_valid(self, form: BaseForm) -> HttpResponse:
         assert isinstance(form, PlayerForm)
         player = form.create_player()
         response = super().form_valid(form)
         game_id = str(self.kwargs['game_id'])
+        verify_game_exists = AsyncToSync(GameRedisORM.verify_game_exists)
+        game_exists = verify_game_exists(game_id)
+        if not game_exists:
+            # todo: notify game expired
+            return redirect(f'/games/create/')
+
         response.set_cookie(
             key=game_id,
             value=str(player.id),

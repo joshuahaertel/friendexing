@@ -1,4 +1,6 @@
-from typing import Optional
+import asyncio
+from asyncio import AbstractEventLoop
+from typing import Optional, Dict
 
 import aioredis
 from aioredis import Redis
@@ -10,7 +12,7 @@ from games.models import Game, Player, State
 
 
 class RedisORM:
-    _redis_pool: Redis = None
+    _redis_pools: Dict[AbstractEventLoop, Redis] = {}
 
     def __init__(self, obj):
         self.obj = obj
@@ -25,12 +27,14 @@ class RedisORM:
     async def get_redis_pool(redis_pool: Redis = None):
         if redis_pool:
             return redis_pool
-        if RedisORM._redis_pool is None:
-            RedisORM._redis_pool = await aioredis.create_redis_pool(
+        loop = asyncio.get_event_loop()
+        pool = RedisORM._redis_pools.get(loop)
+        if pool is None:
+            RedisORM._redis_pools[loop] = await aioredis.create_redis_pool(
                 **settings.REDIS_CONFIGURATION,
                 encoding='utf-8',
             )
-        return RedisORM._redis_pool
+        return RedisORM._redis_pools[loop]
 
 
 class GameRedisORM(RedisORM):
@@ -133,15 +137,6 @@ class GameRedisORM(RedisORM):
         ]
 
     @classmethod
-    async def get_guess_end_time(cls, game_id) -> float:
-        redis_pool = await cls.get_redis_pool()
-        state_key = f'state:{game_id}'
-        return await redis_pool.hget(
-            state_key,
-            'guess_end_time',
-        )
-
-    @classmethod
     async def add_guess(cls, game_id, guess):
         redis_pool = await cls.get_redis_pool()
         guesses_key = f'guesses:{game_id}'
@@ -203,6 +198,13 @@ class GameRedisORM(RedisORM):
         redis_pool = await cls.get_redis_pool()
         guesses_key = f'guesses:{game_id}'
         await redis_pool.delete(guesses_key)
+
+    @classmethod
+    async def verify_game_exists(cls, game_id):
+        redis_pool = await cls.get_redis_pool()
+        game_state_key = f'state:{game_id}'
+        phase = await redis_pool.hget(game_state_key, 'phase')
+        return bool(phase)
 
 
 class PlayerRedisORM(RedisORM):

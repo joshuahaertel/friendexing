@@ -19,6 +19,21 @@ services:
       - "SECRET_KEY=d!2^(l8ke+6s02qv2b*5&%q7+-gz#p!(9pds&+fow1rh(%g&&z"
       - PYTHONASYNCIODEBUG=1
 
+  heroku:
+    build:
+      context: .
+      target: heroku
+    command: python manage.py runserver 0.0.0.0:8001
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_TLS_URL=redis://redis
+      - "SECRET_KEY=d!2^(l8ke+6s02qv2b*5&%q7+-gz#p!(9pds&+fow1rh(%g&&z"
+      - PYTHONASYNCIODEBUG=1
+      - DJANGO_SETTINGS_MODULE=configuration.settings.heroku_local
+
 # COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build test
   test:
     build:

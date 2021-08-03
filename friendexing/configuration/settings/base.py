@@ -71,11 +71,18 @@ TEMPLATES = [
 WSGI_APPLICATION = 'configuration.wsgi.application'
 ASGI_APPLICATION = 'configuration.asgi.application'
 
+REDIS_URL = os.environ['REDIS_TLS_URL']
+REDIS_CONFIGURATION = {
+    'address': REDIS_URL,
+}
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('redis', 6379)],
+            'hosts': [
+                REDIS_CONFIGURATION,
+            ],
         },
     },
 }
@@ -129,11 +136,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-REDIS_URL = os.environ['REDIS_TLS_URL']
-REDIS_CONFIGURATION = {
-    'address': REDIS_URL,
-}
 
 LOGGING = {
     "version": 1,
