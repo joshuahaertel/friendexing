@@ -2,6 +2,8 @@ const gameId = window.location.pathname.split("/")[2]
 
 const wsScheme = window.location.protocol == "https:" ? "wss://" : "ws://";
 
+const guessTextBox = document.getElementById('id_guess');
+
 function getSocket() {
 
   const socket = new WebSocket(
@@ -14,18 +16,24 @@ function getSocket() {
 
   const scores = document.getElementById('id_scores');
   const answers = document.getElementById('id_answers')
+  const previousAnswer = document.getElementById('id_previous_answer');
   socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
-    if (data.type === 'correct_answer') {
+    if (data.type === 'show_answer') {
+      // todo: Toast
+      guessTextBox.value = ''
       scores.innerHTML = '';
       answers.innerHTML = '';
-      data.scores.forEach(function(score) {
-        scores.innerHTML += '<p>' + score.score + ' - ' + score.name + '</p>';
+      previousAnswer.innerText = data.answer;
+    } else if (data.type === 'update_guesses') {
+      answers.innerHTML = '';
+      data.guesses.forEach((guess, index) => {
+        answers.innerHTML +=
+          '<input type="checkbox" class="answer" id="answer' + index + '" value="' + guess[0] + '">' + 
+          '<label for="answer' + index + '">' + guess[0] + ' - ' + guess[1] + '</label><br/>';
       })
-    } else if (data.type === 'new_guess') {
-      answers.innerHTML += '<p>' + data.name + ' - ' + data.guess + ' - ' + data.elapsed_time + '</p>';
-    } else if (data.type === 'scores') {
-      scores.innerHTML = "";
+    } else if (data.type === 'update_scores') {
+      scores.innerHTML = '';
       data.scores.forEach(function(score, index) {
         scores.innerHTML += '<p>' + (index + 1) + '. ' + score.name + ' - ' + score.score + '</p>';
       })
@@ -42,8 +50,25 @@ function getSocket() {
 
 const adminSocket = getSocket();
 
-const submitButton = document.getElementById('id_submit');
-const guessTextBox = document.getElementById('id_guess');
-submitButton.onclick = function(event) {
-  adminSocket.send(JSON.stringify({correct_answer: guessTextBox.value}))
+const formElement = document.getElementById('id_form');
+formElement.onsubmit = function(event) {
+  event.preventDefault();
+  const correctAnswers = []
+  document.querySelectorAll(".answer").forEach((answerBox) => {
+    correctAnswers.push(answerBox.value);
+  })
+  adminSocket.send(JSON.stringify({
+    type: 'submit_answer',
+    display_answer: guessTextBox.value,
+    correct_answers: correctAnswers,
+  }))
+  return false;
+};
+
+const playButton = document.getElementById('id_play_button');
+playButton.onclick = function(event) {
+  adminSocket.send(JSON.stringify({
+    type: 'update_phase',
+    phase: 'play',
+  }))
 }

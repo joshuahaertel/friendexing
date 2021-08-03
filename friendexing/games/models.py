@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict
 from uuid import uuid4, UUID
 
 
@@ -11,27 +11,15 @@ class Game:
             name: str,
     ):
         self.id = uuid4()
-        self.settings = Settings(
-            total_time_to_guess,
-            should_randomize_fields,
-        )
         admin = Player(name)
         self.players: List['Player'] = [admin]
         self.batches: List['Batch'] = []
         self.state = State(
+            total_time_to_guess,
+            should_randomize_fields,
             phase='wait',
             admin_id=admin.id,
         )
-
-
-class Settings:
-    def __init__(
-            self,
-            total_time_to_guess: int,
-            should_randomize_fields: bool,
-    ):
-        self.total_time_to_guess = total_time_to_guess
-        self.should_randomize_fields = should_randomize_fields
 
 
 class Player:
@@ -79,9 +67,19 @@ class Field:
 class State:
     def __init__(
             self,
+            total_time_to_guess: int,
+            should_randomize_fields: bool,
             phase,
             admin_id,
+            guess_end_time=0,
     ):
+        self.total_time_to_guess = total_time_to_guess
+        self.should_randomize_fields = should_randomize_fields
         self.phase = phase
         self.admin_id = admin_id
-        self.guess_end_time: Optional[float] = None
+        self.guess_end_time: float = guess_end_time
+
+
+class Phases:
+    PLAY = 'play'
+    WAIT = 'wait'

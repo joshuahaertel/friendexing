@@ -91,19 +91,20 @@
             <div class="row">
                 <div class="col" id="id_input">
                     {% block answers %}{% endblock %}
-                    <form>
+                    <form id="id_form">
                         <div class="form-group row justify-content-end">
                             <div class="col-12 col-sm-9">
-                                <input class="form-control" id="id_guess" type="text" placeholder="guess" required>
+                                <input class="form-control" id="id_guess" type="text" placeholder="{% block textplaceholder %}Guess{% endblock %}" required>
                             </div>
                             <div class="col-4 col-sm-3">
-                                <button id="id_submit" class="form-control" type="button">Submit</button>
+                                <button id="id_submit" class="form-control">Submit</button>
                             </div>
                         </div>
                     </form>
                     <div>
                         <p>Previous Answer: <span id="id_previous_answer"></span></p>
                     </div>
+                    {% block controls %}{% endblock %}
                 </div>
             </div>
         </div>

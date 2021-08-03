@@ -20,6 +20,8 @@ const playerId = getCookie(gameId);
 
 const wsScheme = window.location.protocol == "https:" ? "wss://" : "ws://";
 
+const guessTextBox = document.getElementById('id_guess');
+
 function getSocket() {
   const playerSocket = new WebSocket(
     wsScheme
@@ -35,16 +37,27 @@ function getSocket() {
   const previousAnswer = document.getElementById('id_previous_answer');
   playerSocket.onmessage = function(event) {
     const data = JSON.parse(event.data);
-    previousAnswer.innerText = data.answer;
-    scores.innerHTML = "";
-    const scoresList = data.scores.slice(0, data.num_top_players)
-    scoresList.forEach(function(score, index) {
-      scores.innerHTML += '<p>' + (index + 1) + '. ' + score.name + ' - ' + score.score + '</p>';
-    })
-    if (data.scores.length >= data.num_top_players) {
-      scores.innerHTML += '<p>...</p>';
-      const myScore = data.scores[data.scores.length - 1]
-      scores.innerHTML += '<p>' + myScore.name + ' - ' + myScore.score + '</p>';
+    const type = data.type;
+    if (type === 'update_scores') {
+      scores.innerHTML = "";
+      const data_scores = data.scores;
+      const scoresList = data_scores.slice(0, data.num_top_players)
+      scoresList.forEach(function(score, index) {
+        scores.innerHTML += '<p>' + (index + 1) + '. ' + score.name + ' - ' + score.score + '</p>';
+      })
+      if (data_scores.length >= data.num_top_players) {
+        scores.innerHTML += '<p>...</p>';
+        const myScore = data_scores[data_scores.length - 1]
+        scores.innerHTML += '<p>' + myScore.name + ' - ' + myScore.score + '</p>';
+      }
+    } else if (type === 'show_answer') {
+      // todo: toast
+      guessTextBox.value = ''
+      previousAnswer.innerText = data.answer;
+    } else if (type === 'reject_guess') {
+      console.log('todo: toast error message' + data.message)
+    } else {
+      console.error("Unexpected socket reply: " + event.data)
     }
   }
 
@@ -56,8 +69,9 @@ function getSocket() {
 
 const playerSocket = getSocket();
 
-const submitButton = document.getElementById('id_submit');
-const guessTextBox = document.getElementById('id_guess');
-submitButton.onclick = function(event) {
-  playerSocket.send(JSON.stringify({guess: guessTextBox.value, elapsed_time: 10}))
-}
+const formElement = document.getElementById('id_form');
+formElement.onsubmit = function(event) {
+  event.preventDefault();
+  playerSocket.send(JSON.stringify({guess: guessTextBox.value}));
+  return false;
+};

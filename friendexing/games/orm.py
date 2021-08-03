@@ -43,25 +43,9 @@ class GameRedisORM(RedisORM):
         game = self.obj
         game_id = game.id
         redis_pool = await self.get_redis_pool(redis_pool)
-        await self.save_settings(game, game_id, redis_pool)
         await self.save_players(game, game_id, redis_pool)
         # await self.save_batches(game, game_id, redis_pool)
         await self.save_state(game, game_id, redis_pool)
-
-    @staticmethod
-    async def save_settings(game, game_id, redis_pool):
-        game_settings = game.settings
-        settings_key = f'settings:{game_id}'
-        if game_settings.should_randomize_fields:
-            should_randomize_fields = 1
-        else:
-            should_randomize_fields = 0
-        settings_dict = {
-            'total_time_to_guess': game_settings.total_time_to_guess,
-            'should_randomize_fields': should_randomize_fields,
-        }
-        await redis_pool.hmset_dict(settings_key, settings_dict)
-        await redis_pool.expire(settings_key, GAME_EXPIRY_SECONDS)
 
     @staticmethod
     async def save_players(game, game_id, redis_pool):
@@ -88,7 +72,13 @@ class GameRedisORM(RedisORM):
     async def save_state(game, game_id, redis_pool):
         state = game.state
         game_state_key = f'state:{game_id}'
+        if state.should_randomize_fields:
+            should_randomize_fields = 1
+        else:
+            should_randomize_fields = 0
         await redis_pool.hmset_dict(game_state_key, {
+            'total_time_to_guess': state.total_time_to_guess,
+            'should_randomize_fields': should_randomize_fields,
             'phase': state.phase,
             'admin_id': str(state.admin_id),
         })
@@ -96,21 +86,24 @@ class GameRedisORM(RedisORM):
 
     @classmethod
     async def get_game_state(cls, game_id) -> Optional[State]:
-        print('getting game state')
         redis_pool = await cls.get_redis_pool()
-        print('got redis pool', redis_pool)
         values = await redis_pool.hmget(
             f'state:{game_id}',
+            'total_time_to_guess',
+            'should_randomize_fields',
             'phase',
             'admin_id',
+            'guess_end_time',
         )
-        print('got values', values)
-        phase = values[0]
+        phase = values[2]
         if phase is None:
             return None
         return State(
+            total_time_to_guess=int(values[0]),
+            should_randomize_fields=values[1],
             phase=phase,
-            admin_id=values[1],
+            admin_id=values[3],
+            guess_end_time=float(values[4] or 0),
         )
 
     @classmethod
@@ -164,10 +157,7 @@ class GameRedisORM(RedisORM):
             stop=-1,
             withscores=True,
         )
-        return [
-            (scores_list[index], scores_list[index + 1])
-            for index in range(0, len(scores_list), 2)
-        ]
+        return scores_list
 
     @classmethod
     async def player_iterator(cls, game_id):
@@ -187,6 +177,20 @@ class GameRedisORM(RedisORM):
             players_key,
             *player_scores,
         )
+
+    @classmethod
+    async def update_phase(cls, game_id, phase, guess_end_time):
+        redis_pool = await cls.get_redis_pool()
+        game_state_key = f'state:{game_id}'
+        pairs = [
+            'phase', phase,
+            'guess_end_time', guess_end_time,
+        ]
+        await redis_pool.hmset(
+            game_state_key,
+            *pairs,
+        )
+        await redis_pool.expire(game_state_key, GAME_EXPIRY_SECONDS)
 
 
 class PlayerRedisORM(RedisORM):
@@ -241,11 +245,22 @@ class PlayerRedisORM(RedisORM):
         return Player(
             id_=player_id,
             name=name,
-            score=results[1],
+            score=int(results[1]),
             guess_id=results[2],
             guess=results[3],
-            potential_points=results[4],
+            potential_points=int(results[4]),
         )
+
+    @classmethod
+    async def save_guess(cls, player_id, guess, potential_score_delta):
+        redis_pool = await cls.get_redis_pool()
+        player_key = f'player:{player_id}'
+        player_dict = {
+            'guess': guess,
+            'potential_points': potential_score_delta,
+        }
+        await redis_pool.hmset_dict(player_key, player_dict)
+        await redis_pool.expire(player_key, GAME_EXPIRY_SECONDS)
 
 
 class BatchRedisORM(RedisORM):

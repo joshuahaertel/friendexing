@@ -5,6 +5,7 @@ from typing import Set
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 from games.constants import NUM_TOP_PLAYERS
+from games.models import Phases
 from games.orm import GameRedisORM, PlayerRedisORM
 
 
@@ -38,7 +39,7 @@ class PlayConsumer(AsyncWebsocketConsumer):
             )
             top_players.append(player_score)
         await self.send(text_data=json.dumps({
-            'type': 'scores',
+            'type': 'update_scores',
             'num_top_players': NUM_TOP_PLAYERS,
             'scores': [
                 top_player.serialize_as_json()
@@ -55,19 +56,31 @@ class PlayConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data=None, bytes_data=None):
         received_time = time()
         text_data_json = json.loads(text_data)
-        guess_end_time = await GameRedisORM.get_guess_end_time(self.game_id)
-        if not guess_end_time:
-            await self.reject_answer()
+        game_state = await GameRedisORM.get_game_state(self.game_id)
+        if not game_state:
+            await self.reject_answer(message='Game no longer exists')
             return
-        score = guess_end_time - received_time
-        if score <= 0:
-            await self.reject_answer()
+        if game_state.phase != Phases.PLAY:
+            await self.reject_answer(message='Not accepting answers')
+            return
+        potential_score_delta = int(
+            game_state.guess_end_time - received_time
+        ) + 1
+        if potential_score_delta <= 0:
+            await self.reject_answer(
+                message='Missed deadline to submit an answer',
+            )
             return
 
-        # todo: save guess and score to user
         raw_guess: str = text_data_json['guess']
-        # todo: cleaning?
+        # todo: prevent duplicate sending of the same answer
+        # todo: lower score of previous answer
         cleaned_guess = raw_guess.strip().lower()
+        await PlayerRedisORM.save_guess(
+            self.player_id,
+            cleaned_guess,
+            potential_score_delta,
+        )
         await GameRedisORM.add_guess(self.game_id, cleaned_guess)
 
         await self.channel_layer.group_send(
@@ -77,14 +90,15 @@ class PlayConsumer(AsyncWebsocketConsumer):
             }
         )
 
-    async def reject_answer(self):
+    async def reject_answer(self, message):
         await self.send(text_data=json.dumps({
-            'type': 'guess',
-            'message': 'We are no longer accepting answers for this field',
+            'type': 'reject_guess',
+            'message': message,
         }))
 
     async def correct_answer(self, event):
         await self.send(text_data=json.dumps({
+            'type': 'show_answer',
             'answer': event['answer'],
         }))
         await self.send_scores()
@@ -109,11 +123,12 @@ class AdminConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
         await self.send_scores()
+        await self.send_guesses()
 
     async def send_scores(self):
         all_scores = await GameRedisORM.get_player_scores(self.game_id)
         await self.send(text_data=json.dumps({
-            'type': 'scores',
+            'type': 'update_scores',
             'scores': [
                 player_score.serialize_as_json()
                 for player_score in all_scores
@@ -131,39 +146,55 @@ class AdminConsumer(AsyncWebsocketConsumer):
         )
 
     async def receive(self, text_data=None, bytes_data=None):
+        # todo: state checking
         text_data_json = json.loads(text_data)
-        display_answer = text_data_json['display_answer']
-        correct_answers: Set[str] = set(text_data_json['correct_answers'])
-        player_scores = []
-        async for player in GameRedisORM.player_iterator(self.game_id):
-            if player.guess in correct_answers:
-                player.score += player.potential_points
-            player.guess = ''
-            player.guess_id = ''
-            player.potential_points = 0
-            player_scores.append(player.score)
-            player_scores.append(player.id)
-            await PlayerRedisORM(player).save()
-        await GameRedisORM.set_player_scores(self.game_id, player_scores)
+        message_type = text_data_json['type']
+        game_state = await GameRedisORM.get_game_state(self.game_id)
+        if message_type == 'submit_answer':
+            display_answer = text_data_json['display_answer']
+            correct_answers: Set[str] = set(text_data_json['correct_answers'])
+            player_scores = []
+            async for player in GameRedisORM.player_iterator(self.game_id):
+                if player.guess in correct_answers:
+                    player.score += player.potential_points
+                player.guess = ''
+                player.guess_id = ''
+                player.potential_points = 0
+                player_scores.append(player.score)
+                player_scores.append(player.id)
+                await PlayerRedisORM(player).save()
+            await GameRedisORM.set_player_scores(self.game_id, player_scores)
+            # todo: clean guesses
 
-        await self.channel_layer.group_send(
-            self.game_id,
-            {
-                'type': 'correct_answer',
-                'answer': display_answer,
-            }
-        )
+            await self.channel_layer.group_send(
+                self.game_id,
+                {
+                    'type': 'correct_answer',
+                    'answer': display_answer,
+                }
+            )
+        elif message_type == 'update_phase':
+            # todo: checks of current phase
+            guess_end_time = time() + game_state.total_time_to_guess
+            await GameRedisORM.update_phase(
+                self.game_id,
+                Phases.PLAY,
+                guess_end_time,
+            )
 
     async def new_guess(self, _):
+        await self.send_guesses()
+
+    async def send_guesses(self):
         # todo: validate in guessing state
         await self.send(text_data=json.dumps({
-            'type': 'new_guess',
+            'type': 'update_guesses',
             'guesses': await GameRedisORM.get_guesses(self.game_id)
         }))
 
     async def correct_answer(self, event):
         await self.send(text_data=json.dumps({
-            'type': 'correct_answer',
+            'type': 'show_answer',
             'answer': event['answer'],
         }))
         await self.send_scores()
