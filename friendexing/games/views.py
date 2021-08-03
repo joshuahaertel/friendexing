@@ -28,9 +28,11 @@ class AsyncToSync:
     def __init__(self, callable_):
         self.callable_ = callable_
         if callable_ not in self._call_cache:
-            self._call_cache[callable_] = ThreadPoolExecutor(max_workers=1)
-        self.executor: ThreadPoolExecutor = self._call_cache[callable_]
-        self.event_loop = asyncio.new_event_loop()
+            self._call_cache[callable_] = (
+                ThreadPoolExecutor(max_workers=1),
+                asyncio.new_event_loop(),
+            )
+        self.executor, self.event_loop = self._call_cache[callable_]
 
     def __call__(self, *args, **kwargs):
         future = self.executor.submit(

@@ -32,6 +32,7 @@ class RedisORM:
         if pool is None:
             RedisORM._redis_pools[loop] = await aioredis.create_redis_pool(
                 **settings.REDIS_CONFIGURATION,
+                minsize=1, maxsize=1,
                 encoding='utf-8',
             )
         return RedisORM._redis_pools[loop]
