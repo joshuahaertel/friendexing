@@ -45,7 +45,7 @@ function getSocket() {
       scoresList.forEach(function(score, index) {
         scores.innerHTML += '<p>' + (index + 1) + '. ' + score.name + ' - ' + score.score + '</p>';
       })
-      if (data_scores.length >= data.num_top_players) {
+      if (data_scores.length > data.num_top_players) {
         scores.innerHTML += '<p>...</p>';
         const myScore = data_scores[data_scores.length - 1]
         scores.innerHTML += '<p>' + myScore.name + ' - ' + myScore.score + '</p>';
@@ -73,5 +73,6 @@ const formElement = document.getElementById('id_form');
 formElement.onsubmit = function(event) {
   event.preventDefault();
   playerSocket.send(JSON.stringify({guess: guessTextBox.value}));
+  // todo: create a message confirming receipt
   return false;
 };

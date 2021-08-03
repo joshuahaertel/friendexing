@@ -3,6 +3,7 @@ from typing import Optional, Any, Dict
 from uuid import UUID
 
 from asgiref.sync import AsyncToSync
+from channels.layers import get_channel_layer
 from django.forms import BaseForm
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect
@@ -13,7 +14,7 @@ from django.views.generic import FormView
 from games.constants import GAME_EXPIRY_DELTA
 from games.forms import GameForm, PlayerForm
 from games.models import Game, State
-from games.orm import GameRedisORM
+from games.orm import GameRedisORM, PlayerRedisORM
 
 
 def get_expiry() -> datetime:
@@ -57,7 +58,10 @@ def game_view(request: HttpRequest, game_id: UUID) -> HttpResponse:
             if player_id == game_state.admin_id:
                 response = render(request, 'games/admin.html')
             else:
-                # todo: check that player in list
+                get_player = AsyncToSync(PlayerRedisORM.get_player)
+                player = get_player(player_id)
+                if player is None:
+                    return redirect(f'/games/{game_id}/join/')
                 response = render(request, 'games/play.html')
         response.set_cookie(
             key=game_id_str,
@@ -83,9 +87,16 @@ class PlayerCreate(FormView):
             value=str(player.id),
             expires=get_expiry(),
         )
-        # todo: notify everyone
         add_player_sync = AsyncToSync(GameRedisORM.add_player)
         add_player_sync(game_id, player)
+        channel_layer = get_channel_layer()
+        group_send = AsyncToSync(channel_layer.group_send)
+        group_send(
+            game_id,
+            {
+                'type': 'send_scores',
+            }
+        )
         return response
 
     def get_context_data(self, **kwargs: Dict['str', Any]) -> Dict[str, Any]:

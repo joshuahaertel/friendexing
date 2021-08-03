@@ -9,6 +9,8 @@ from games.models import Phases
 from games.orm import GameRedisORM, PlayerRedisORM
 
 
+# todo: show previous answer upon connection
+# todo: state management
 class PlayConsumer(AsyncWebsocketConsumer):
     game_id: str
     game_group_id: str
@@ -28,7 +30,7 @@ class PlayConsumer(AsyncWebsocketConsumer):
         await self.accept()
         await self.send_scores()
 
-    async def send_scores(self):
+    async def send_scores(self, _=None):
         top_players = await GameRedisORM.get_top_player_scores(self.game_id)
         for top_player in top_players:
             if top_player.player_id == self.player_id:
@@ -73,7 +75,6 @@ class PlayConsumer(AsyncWebsocketConsumer):
             return
 
         raw_guess: str = text_data_json['guess']
-        # todo: lower score of previous answer
         cleaned_guess = raw_guess.strip().lower()
         player = await PlayerRedisORM.get_player(self.player_id)
         old_guess = player.guess
@@ -131,7 +132,7 @@ class AdminConsumer(AsyncWebsocketConsumer):
         await self.send_scores()
         await self.send_guesses()
 
-    async def send_scores(self):
+    async def send_scores(self, _=None):
         all_scores = await GameRedisORM.get_player_scores(self.game_id)
         await self.send(text_data=json.dumps({
             'type': 'update_scores',
