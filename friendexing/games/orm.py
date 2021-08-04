@@ -111,6 +111,7 @@ class GameRedisORM(RedisORM):
             return None
         return State(
             total_time_to_guess=int(values[0]),
+            # note: Going off of truth-y here
             should_randomize_fields=values[1],
             phase=phase,
             admin_id=values[3],

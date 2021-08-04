@@ -31,8 +31,8 @@ function getSocket() {
       answers.innerHTML = '';
       data.guesses.forEach((guess, index) => {
         answers.innerHTML +=
-          '<input type="checkbox" class="answer" id="answer' + index + '" value="' + guess[0] + '">' + 
-          '<label for="answer' + index + '">' + guess[0] + ' - ' + guess[1] + '</label><br/>';
+          '<input type="checkbox" class="answer" id="id_answer_' + index + '" value="' + guess[0] + '">' +
+          '<label for="id_answer_' + index + '">' + guess[0] + ' - ' + guess[1] + '</label><br/>';
       })
     } else if (type === 'update_scores') {
       scores.innerHTML = '';
@@ -79,7 +79,9 @@ formElement.onsubmit = function(event) {
   event.preventDefault();
   const correctAnswers = []
   document.querySelectorAll(".answer").forEach((answerBox) => {
-    correctAnswers.push(answerBox.value);
+    if (answerBox.checked) {
+      correctAnswers.push(answerBox.value);
+    }
   })
   adminSocket.send(JSON.stringify({
     type: 'submit_answer',
