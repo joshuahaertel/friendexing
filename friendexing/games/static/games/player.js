@@ -35,6 +35,7 @@ function getSocket() {
 
   const scores = document.getElementById('id_scores');
   const previousAnswer = document.getElementById('id_previous_answer');
+  let interval = null;
   playerSocket.onmessage = function(event) {
     const data = JSON.parse(event.data);
     const type = data.type;
@@ -63,6 +64,26 @@ function getSocket() {
         backgroundColor = 'bg-danger';
       }
       createToast(data.message, backgroundColor);
+    } else if (type === 'update_state') {
+      const phase = data.phase;
+      if (phase === 'play') {
+        let timeRemaining = data.time_remaining;
+        gamePhaseElement.innerText = 'Seconds left to guess: ' + timeRemaining;
+        if (interval) {
+          clearInterval(interval);
+        }
+        interval = setInterval(function(){
+          timeRemaining -= 1;
+          gamePhaseElement.innerText = 'Seconds left to guess: ' + timeRemaining;
+          if (timeRemaining <= 0){
+            clearInterval(interval);
+            handleWaitPhase();
+          }
+        }, 1000);
+        // todo: setup timer
+      } else if (phase === 'wait') {
+        handleWaitPhase();
+      }
     } else {
       console.error("Unexpected socket reply: " + event.data)
     }
@@ -82,3 +103,8 @@ formElement.onsubmit = function(event) {
   playerSocket.send(JSON.stringify({guess: guessTextBox.value}));
   return false;
 };
+
+const gamePhaseElement = document.getElementById('id_game_state');
+function handleWaitPhase() {
+  gamePhaseElement.innerText = 'Waiting for the admin to advance the game';
+}

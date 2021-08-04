@@ -29,6 +29,7 @@ class PlayConsumer(AsyncWebsocketConsumer):
         )
         await self.accept()
         await self.send_scores()
+        await self.send_state()
 
     async def send_scores(self, _=None):
         top_players = await GameRedisORM.get_top_player_scores(self.game_id)
@@ -47,6 +48,19 @@ class PlayConsumer(AsyncWebsocketConsumer):
                 top_player.serialize_as_json()
                 for top_player in top_players
             ],
+        }))
+
+    async def send_state(self, *_):
+        game_state = await GameRedisORM.get_game_state(self.game_id)
+        time_remaining = int(game_state.guess_end_time - time())
+        if time_remaining < 0:
+            phase = Phases.WAIT
+        else:
+            phase = Phases.PLAY
+        await self.send(text_data=json.dumps({
+            'type': 'update_state',
+            'phase': phase,
+            'time_remaining': time_remaining,
         }))
 
     async def disconnect(self, close_code):
@@ -154,6 +168,7 @@ class AdminConsumer(AsyncWebsocketConsumer):
         await self.accept()
         await self.send_scores()
         await self.send_guesses()
+        await self.send_state()
 
     async def send_scores(self, _=None):
         all_scores = await GameRedisORM.get_player_scores(self.game_id)
@@ -163,6 +178,19 @@ class AdminConsumer(AsyncWebsocketConsumer):
                 player_score.serialize_as_json()
                 for player_score in all_scores
             ],
+        }))
+
+    async def send_state(self, *_):
+        game_state = await GameRedisORM.get_game_state(self.game_id)
+        time_remaining = int(game_state.guess_end_time - time())
+        if time_remaining < 0:
+            phase = Phases.WAIT
+        else:
+            phase = Phases.PLAY
+        await self.send(text_data=json.dumps({
+            'type': 'update_state',
+            'phase': phase,
+            'time_remaining': time_remaining,
         }))
 
     async def disconnect(self, close_code):
@@ -193,6 +221,8 @@ class AdminConsumer(AsyncWebsocketConsumer):
                 player_scores.append(player.score)
                 player_scores.append(player.id)
                 await PlayerRedisORM(player).save()
+            # todo: fix corner case where admin sends an answer and no one
+            # has submitted anything
             await GameRedisORM.set_player_scores(self.game_id, player_scores)
             await GameRedisORM.clear_guesses(self.game_id)
 
@@ -210,6 +240,12 @@ class AdminConsumer(AsyncWebsocketConsumer):
                 self.game_id,
                 Phases.PLAY,
                 guess_end_time,
+            )
+            await self.channel_layer.group_send(
+                self.game_id,
+                {
+                    'type': 'send_state',
+                }
             )
 
     async def new_guess(self, _):

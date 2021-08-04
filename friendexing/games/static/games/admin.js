@@ -17,26 +17,48 @@ function getSocket() {
   const scores = document.getElementById('id_scores');
   const answers = document.getElementById('id_answers')
   const previousAnswer = document.getElementById('id_previous_answer');
+  let interval = null;
   socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
-    if (data.type === 'show_answer') {
+    const type = data.type;
+    if (type === 'show_answer') {
       createToast('The correct answer has been submitted!', 'bg-success');
       guessTextBox.value = ''
       scores.innerHTML = '';
       answers.innerHTML = '';
       previousAnswer.innerText = data.answer;
-    } else if (data.type === 'update_guesses') {
+    } else if (type === 'update_guesses') {
       answers.innerHTML = '';
       data.guesses.forEach((guess, index) => {
         answers.innerHTML +=
           '<input type="checkbox" class="answer" id="answer' + index + '" value="' + guess[0] + '">' + 
           '<label for="answer' + index + '">' + guess[0] + ' - ' + guess[1] + '</label><br/>';
       })
-    } else if (data.type === 'update_scores') {
+    } else if (type === 'update_scores') {
       scores.innerHTML = '';
       data.scores.forEach(function(score, index) {
         scores.innerHTML += '<p>' + (index + 1) + '. ' + score.name + ' - ' + score.score + '</p>';
       })
+    } else if (type === 'update_state') {
+      const phase = data.phase;
+      if (phase === 'play') {
+        let timeRemaining = data.time_remaining;
+        gamePhaseElement.innerText = 'Players have ' + timeRemaining + ' seconds left to guess.';
+        if (interval) {
+          clearInterval(interval);
+        }
+        interval = setInterval(function(){
+          timeRemaining -= 1;
+          gamePhaseElement.innerText = 'Players have ' + timeRemaining + ' seconds left to guess.';
+          if (timeRemaining <= 0){
+            clearInterval(interval);
+            handleWaitPhase();
+          }
+        }, 1000);
+        // todo: setup timer
+      } else if (phase === 'wait') {
+        handleWaitPhase();
+      }
     } else {
       console.error("Unexpected socket reply: " + event.data)
     }
@@ -71,4 +93,10 @@ playButton.onclick = function(event) {
     type: 'update_phase',
     phase: 'play',
   }))
+}
+
+
+const gamePhaseElement = document.getElementById('id_game_state');
+function handleWaitPhase() {
+  gamePhaseElement.innerText = 'If there are any submissions, please select them and submit an official answer. Start the next round.';
 }
