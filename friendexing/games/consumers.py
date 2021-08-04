@@ -4,7 +4,7 @@ from typing import Set
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from games.constants import NUM_TOP_PLAYERS
+from games.constants import NUM_TOP_PLAYERS, MessageSeverityLevel
 from games.models import Phases
 from games.orm import GameRedisORM, PlayerRedisORM
 
@@ -60,17 +60,25 @@ class PlayConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         game_state = await GameRedisORM.get_game_state(self.game_id)
         if not game_state:
-            await self.reject_answer(message='Game no longer exists')
+            await self.send_message(
+                message=('Game no longer exists, please refresh and create '
+                         'a new one'),
+                severity=MessageSeverityLevel.DANGER,
+            )
             return
         if game_state.phase != Phases.PLAY:
-            await self.reject_answer(message='Not accepting answers')
+            await self.send_message(
+                message='Not accepting answers',
+                severity=MessageSeverityLevel.WARNING
+            )
             return
         potential_score_delta = int(
             game_state.guess_end_time - received_time
         ) + 1
         if potential_score_delta <= 0:
-            await self.reject_answer(
+            await self.send_message(
                 message='Missed deadline to submit an answer',
+                severity=MessageSeverityLevel.WARNING
             )
             return
 
@@ -79,7 +87,14 @@ class PlayConsumer(AsyncWebsocketConsumer):
         player = await PlayerRedisORM.get_player(self.player_id)
         old_guess = player.guess
         if old_guess == cleaned_guess:
-            # duplicate send, don't change anything
+            await self.send_message(
+                message=('Duplicate/similar-enough response submitted. '
+                         'Using first submission to increase points '
+                         '(this will not affect if answer is considered '
+                         'correct)'
+                         ),
+                severity=MessageSeverityLevel.INFO,
+            )
             return
         await PlayerRedisORM.save_guess(
             self.player_id,
@@ -96,11 +111,19 @@ class PlayConsumer(AsyncWebsocketConsumer):
                 'type': 'new_guess',
             }
         )
+        await self.send_message(
+            message=(f'Guess submitted successfully! '
+                     f'Transformed to: "{cleaned_guess}" '
+                     f'Potential points: {potential_score_delta}'
+                     ),
+            severity=MessageSeverityLevel.INFO,
+        )
 
-    async def reject_answer(self, message):
+    async def send_message(self, message, severity):
         await self.send(text_data=json.dumps({
-            'type': 'reject_guess',
+            'type': 'show_message',
             'message': message,
+            'severity': severity,
         }))
 
     async def correct_answer(self, event):

@@ -158,3 +158,34 @@ mainImageContainer.ontouchstart = function(event) {
     event.preventDefault();
   }
 };
+
+const ToastContainer = document.getElementById('id_toast_container');
+function createToast(message, backgroundColor, options) {
+  const toastDiv = document.createElement('div');
+  toastDiv.classList.add('toast', 'align-items-center', 'text-white', backgroundColor, 'border-0');
+  toastDiv.setAttribute('role', 'alert');
+
+  const formatDiv = document.createElement('div');
+  formatDiv.classList.add('d-flex');
+
+  const toastBody = document.createElement('div');
+  toastBody.classList.add('toast-body');
+  toastBody.innerText = message;
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.classList.add('btn-close', 'btn-close-white', 'me-2', 'm-auto');
+  closeButton.setAttribute('data-bs-dismiss', 'toast');
+
+  toastDiv.appendChild(formatDiv);
+  formatDiv.appendChild(toastBody);
+  formatDiv.appendChild(closeButton);
+
+  const bootstrapToast = new bootstrap.Toast(toastDiv, options);
+  toastDiv.addEventListener('hidden.bs.toast', function () {
+    toastDiv.remove();
+  });
+  bootstrapToast.show();
+
+  ToastContainer.prepend(toastDiv);
+}

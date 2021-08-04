@@ -20,7 +20,7 @@ function getSocket() {
   socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
     if (data.type === 'show_answer') {
-      // todo: Toast
+      createToast('The correct answer has been submitted!', 'bg-success');
       guessTextBox.value = ''
       scores.innerHTML = '';
       answers.innerHTML = '';
@@ -43,7 +43,7 @@ function getSocket() {
   }
 
   socket.onclose = function(e) {
-    console.error('Socket closed unexpectedly, refresh browser');
+    createToast('Connection lost, please refresh your browser to keep playing!', 'bg-danger', {autohide: false})
   };
   return socket
 };

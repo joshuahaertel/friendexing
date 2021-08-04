@@ -51,18 +51,25 @@ function getSocket() {
         scores.innerHTML += '<p>' + myScore.name + ' - ' + myScore.score + '</p>';
       }
     } else if (type === 'show_answer') {
-      // todo: toast
-      guessTextBox.value = ''
+      createToast('A correct answer has been chosen!', 'bg-info');
+      guessTextBox.value = '';
       previousAnswer.innerText = data.answer;
-    } else if (type === 'reject_guess') {
-      console.log('todo: toast error message' + data.message)
+    } else if (type === 'show_message') {
+      const severity = data.severity
+      let backgroundColor = 'bg-info'
+      if (severity === 'warning') {
+        backgroundColor = 'bg-warning';
+      } else if (severity === 'danger') {
+        backgroundColor = 'bg-danger';
+      }
+      createToast(data.message, backgroundColor);
     } else {
       console.error("Unexpected socket reply: " + event.data)
     }
   }
 
   playerSocket.onclose = function(e) {
-    console.error('Socket closed unexpectedly, refresh browser');
+    createToast('Connection lost, please refresh your browser to keep playing!', 'bg-danger', {autohide: false})
   };
   return playerSocket
 };
@@ -73,6 +80,5 @@ const formElement = document.getElementById('id_form');
 formElement.onsubmit = function(event) {
   event.preventDefault();
   playerSocket.send(JSON.stringify({guess: guessTextBox.value}));
-  // todo: create a message confirming receipt
   return false;
 };
