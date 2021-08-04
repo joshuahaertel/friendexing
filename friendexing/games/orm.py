@@ -76,6 +76,11 @@ class GameRedisORM(RedisORM):
     @staticmethod
     async def save_state(game, game_id, redis_pool):
         state = game.state
+        await GameRedisORM.set_state(game_id, state, redis_pool)
+
+    @classmethod
+    async def set_state(cls, game_id, state, redis_pool=None):
+        redis_pool = await cls.get_redis_pool(redis_pool)
         game_state_key = f'state:{game_id}'
         if state.should_randomize_fields:
             should_randomize_fields = 1
@@ -86,6 +91,7 @@ class GameRedisORM(RedisORM):
             'should_randomize_fields': should_randomize_fields,
             'phase': state.phase,
             'admin_id': str(state.admin_id),
+            'guess_end_time': 0,
         })
         await redis_pool.expire(game_state_key, GAME_EXPIRY_SECONDS)
 

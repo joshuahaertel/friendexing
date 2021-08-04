@@ -80,8 +80,10 @@ function getSocket() {
             handleWaitPhase();
           }
         }, 1000);
-        // todo: setup timer
       } else if (phase === 'wait') {
+        if (interval) {
+          clearInterval(interval);
+        }
         handleWaitPhase();
       }
     } else {

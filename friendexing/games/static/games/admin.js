@@ -55,8 +55,10 @@ function getSocket() {
             handleWaitPhase();
           }
         }, 1000);
-        // todo: setup timer
       } else if (phase === 'wait') {
+        if (interval) {
+          clearInterval(interval);
+        }
         handleWaitPhase();
       }
     } else {
@@ -99,6 +101,6 @@ playButton.onclick = function(event) {
 const gamePhaseElement = document.getElementById('id_game_state');
 function handleWaitPhase() {
   gamePhaseElement.innerText = 'If there are any submissions, please select correct ones ' +
-  '(indexing rules allows minor variances) and submit an official answer. ' + 
-  'Start the next round.';
+  '(indexing guidelines allow minor variances and thus there could possibly be a few correct answers) ' +
+  'and submit a singular, official answer with the appropriate capital letters. Start the next round.';
 }

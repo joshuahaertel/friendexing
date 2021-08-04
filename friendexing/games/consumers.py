@@ -209,6 +209,15 @@ class AdminConsumer(AsyncWebsocketConsumer):
         message_type = text_data_json['type']
         game_state = await GameRedisORM.get_game_state(self.game_id)
         if message_type == 'submit_answer':
+            if game_state.phase != Phases.WAIT:
+                await GameRedisORM.update_phase(self.game_id, Phases.WAIT, 0)
+                await self.channel_layer.group_send(
+                    self.game_id,
+                    {
+                        'type': 'send_state',
+                    }
+                )
+
             display_answer = text_data_json['display_answer']
             correct_answers: Set[str] = set(text_data_json['correct_answers'])
             player_scores = []
@@ -221,8 +230,7 @@ class AdminConsumer(AsyncWebsocketConsumer):
                 player_scores.append(player.score)
                 player_scores.append(player.id)
                 await PlayerRedisORM(player).save()
-            # todo: fix corner case where admin sends an answer and no one
-            # has submitted anything
+            # todo: after two hours player iterator expires. Refresh those
             await GameRedisORM.set_player_scores(self.game_id, player_scores)
             await GameRedisORM.clear_guesses(self.game_id)
 
