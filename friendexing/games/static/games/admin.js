@@ -98,5 +98,7 @@ playButton.onclick = function(event) {
 
 const gamePhaseElement = document.getElementById('id_game_state');
 function handleWaitPhase() {
-  gamePhaseElement.innerText = 'If there are any submissions, please select them and submit an official answer. Start the next round.';
+  gamePhaseElement.innerText = 'If there are any submissions, please select correct ones ' +
+  '(indexing rules allows minor variances) and submit an official answer. ' + 
+  'Start the next round.';
 }

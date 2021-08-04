@@ -1,4 +1,5 @@
 import asyncio
+import threading
 from concurrent.futures import Future, ThreadPoolExecutor
 from datetime import datetime
 from typing import Optional, Any, Dict
@@ -22,8 +23,19 @@ def get_expiry() -> datetime:
     return now() + GAME_EXPIRY_DELTA
 
 
+def clean_up_sync_event_loop(loop: asyncio.AbstractEventLoop):
+    def clean_up():
+        if threading.main_thread().is_alive():
+            loop.call_later(2, clean_up)
+        else:
+            loop.stop()
+
+    loop.call_later(2, clean_up)
+
+
 class AsyncToSync:
     loop = asyncio.new_event_loop()
+    loop.call_soon_threadsafe(clean_up_sync_event_loop, loop)
     executor = ThreadPoolExecutor(max_workers=1)
     executor.submit(loop.run_forever)
     redis_pool = None
