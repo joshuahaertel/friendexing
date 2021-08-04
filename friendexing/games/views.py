@@ -1,5 +1,5 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from datetime import datetime
 from typing import Optional, Any, Dict
 from uuid import UUID
@@ -15,7 +15,7 @@ from django.views.generic import FormView
 from games.constants import GAME_EXPIRY_DELTA
 from games.forms import GameForm, PlayerForm
 from games.models import Game, State
-from games.orm import GameRedisORM, PlayerRedisORM
+from games.orm import GameRedisORM, PlayerRedisORM, RedisORM
 
 
 def get_expiry() -> datetime:
@@ -23,23 +23,39 @@ def get_expiry() -> datetime:
 
 
 class AsyncToSync:
-    _call_cache = {}
+    loop = asyncio.new_event_loop()
+    executor = ThreadPoolExecutor(max_workers=1)
+    executor.submit(loop.run_forever)
+    redis_pool = None
 
     def __init__(self, callable_):
         self.callable_ = callable_
-        if callable_ not in self._call_cache:
-            self._call_cache[callable_] = (
-                ThreadPoolExecutor(max_workers=1),
-                asyncio.new_event_loop(),
-            )
-        self.executor, self.event_loop = self._call_cache[callable_]
 
     def __call__(self, *args, **kwargs):
-        future = self.executor.submit(
-            self.event_loop.run_until_complete,
-            self.callable_(*args, **kwargs),
-        )
+        callable_ = self.callable_
+        loop = self.loop
+        future = Future()
+
+        def callback():
+            task = loop.create_task(callable_(*args, **kwargs))
+
+            def done(async_future: asyncio.Future):
+                try:
+                    future.set_result(async_future.result())
+                except Exception as error:
+                    future.set_exception(error)
+
+            task.add_done_callback(done)
+
+        self.loop.call_soon_threadsafe(callback)
         return future.result()
+
+    @classmethod
+    def get_redis_pool(cls):
+        if AsyncToSync.redis_pool is None:
+            get_pool = AsyncToSync(RedisORM(None).get_redis_pool)
+            AsyncToSync.redis_pool = get_pool(maxsize=1)
+        return AsyncToSync.redis_pool
 
 
 class GameCreate(FormView):
@@ -57,7 +73,8 @@ class GameCreate(FormView):
             expires=get_expiry(),
         )
         save_sync = AsyncToSync(GameRedisORM(game).save)
-        save_sync()
+        redis_pool = AsyncToSync.get_redis_pool()
+        save_sync(redis_pool)
         return response
 
     def get_success_url(self) -> str:
@@ -71,7 +88,8 @@ def game_view(request: HttpRequest, game_id: UUID) -> HttpResponse:
     player_id = request.COOKIES.get(game_id_str)
     if player_id:
         get_game_state = AsyncToSync(GameRedisORM.get_game_state)
-        game_state: Optional[State] = get_game_state(game_id_str)
+        redis_pool = AsyncToSync.get_redis_pool()
+        game_state: Optional[State] = get_game_state(game_id_str, redis_pool)
         if game_state is None:
             # todo: notify game expired
             return redirect(f'/games/create/')
@@ -80,7 +98,7 @@ def game_view(request: HttpRequest, game_id: UUID) -> HttpResponse:
                 response = render(request, 'games/admin.html')
             else:
                 get_player = AsyncToSync(PlayerRedisORM.get_player)
-                player = get_player(player_id)
+                player = get_player(player_id, redis_pool)
                 if player is None:
                     return redirect(f'/games/{game_id}/join/')
                 response = render(request, 'games/play.html')
@@ -101,7 +119,8 @@ class PlayerCreate(FormView):
     def get(self, request, *args, **kwargs):
         game_id = str(self.kwargs['game_id'])
         verify_game_exists = AsyncToSync(GameRedisORM.verify_game_exists)
-        game_exists = verify_game_exists(game_id)
+        redis_pool = AsyncToSync.get_redis_pool()
+        game_exists = verify_game_exists(game_id, redis_pool)
         if not game_exists:
             # todo: notify game expired
             return redirect(f'/games/create/')
@@ -113,7 +132,8 @@ class PlayerCreate(FormView):
         response = super().form_valid(form)
         game_id = str(self.kwargs['game_id'])
         verify_game_exists = AsyncToSync(GameRedisORM.verify_game_exists)
-        game_exists = verify_game_exists(game_id)
+        redis_pool = AsyncToSync.get_redis_pool()
+        game_exists = verify_game_exists(game_id, redis_pool)
         if not game_exists:
             # todo: notify game expired
             return redirect(f'/games/create/')
@@ -124,7 +144,8 @@ class PlayerCreate(FormView):
             expires=get_expiry(),
         )
         add_player_sync = AsyncToSync(GameRedisORM.add_player)
-        add_player_sync(game_id, player)
+        redis_pool = AsyncToSync.get_redis_pool()
+        add_player_sync(game_id, player, redis_pool)
         channel_layer = get_channel_layer()
         group_send = AsyncToSync(channel_layer.group_send)
         group_send(

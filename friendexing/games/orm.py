@@ -24,7 +24,7 @@ class RedisORM:
         raise NotImplementedError
 
     @staticmethod
-    async def get_redis_pool(redis_pool: Redis = None):
+    async def get_redis_pool(redis_pool: Redis = None, maxsize=10):
         if redis_pool:
             return redis_pool
         loop = asyncio.get_event_loop()
@@ -32,7 +32,7 @@ class RedisORM:
         if pool is None:
             RedisORM._redis_pools[loop] = await aioredis.create_redis_pool(
                 **settings.REDIS_CONFIGURATION,
-                minsize=1, maxsize=1,
+                maxsize=maxsize,
                 encoding='utf-8',
             )
         return RedisORM._redis_pools[loop]
@@ -90,8 +90,8 @@ class GameRedisORM(RedisORM):
         await redis_pool.expire(game_state_key, GAME_EXPIRY_SECONDS)
 
     @classmethod
-    async def get_game_state(cls, game_id) -> Optional[State]:
-        redis_pool = await cls.get_redis_pool()
+    async def get_game_state(cls, game_id, redis_pool=None) -> Optional[State]:
+        redis_pool = await cls.get_redis_pool(redis_pool)
         values = await redis_pool.hmget(
             f'state:{game_id}',
             'total_time_to_guess',
@@ -112,8 +112,7 @@ class GameRedisORM(RedisORM):
         )
 
     @classmethod
-    async def add_player(cls, game_id, player):
-        redis_pool = await cls.get_redis_pool()
+    async def add_player(cls, game_id, player, redis_pool):
         await PlayerRedisORM(player).save()
         players_key = f'players:{game_id}'
         await redis_pool.zadd(players_key, player.score, str(player.id))
@@ -201,8 +200,7 @@ class GameRedisORM(RedisORM):
         await redis_pool.delete(guesses_key)
 
     @classmethod
-    async def verify_game_exists(cls, game_id):
-        redis_pool = await cls.get_redis_pool()
+    async def verify_game_exists(cls, game_id, redis_pool):
         game_state_key = f'state:{game_id}'
         phase = await redis_pool.hget(game_state_key, 'phase')
         return bool(phase)
