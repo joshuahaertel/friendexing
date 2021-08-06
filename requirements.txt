@@ -1,5 +1,6 @@
 aiohttp[speedups]
 aioredis
-django
 channels
 channels_redis
+cryptography
+django
