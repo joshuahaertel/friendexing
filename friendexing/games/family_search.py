@@ -19,8 +19,8 @@ class FamilySearchUser:
         fernet = Fernet(os.environb[b'FERNET_KEY'])
         encrypted_username = os.environb[b'FAMILY_SEARCH_USERNAME']
         encrypted_password = os.environb[b'FAMILY_SEARCH_PASSWORD']
-        self.username = fernet.decrypt(encrypted_username)
-        self.password = fernet.decrypt(encrypted_password)
+        self.username = fernet.decrypt(encrypted_username).decode()
+        self.password = fernet.decrypt(encrypted_password).decode()
         self.json_token = ''
 
     async def run(self):
