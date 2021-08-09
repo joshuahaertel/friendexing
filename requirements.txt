@@ -3,4 +3,6 @@ aioredis
 channels
 channels_redis
 cryptography
+defusedxml
 django
+Pillow
