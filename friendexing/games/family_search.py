@@ -1,5 +1,6 @@
 import asyncio
 import os
+import time
 from base64 import b64encode
 from io import BytesIO
 from math import log, ceil
@@ -20,9 +21,12 @@ GET_LOGIN_URL = (
 POST_LOGIN_URL = (
     'https://ident.familysearch.org/cis-web/oauth2/v3/authorization'
 )
-NAMESPACES = {
+MANIFEST_NAMESPACES = {
     'default': 'http://www.w3.org/2005/Atom',
     'indexing': 'http://familysearch.org/idx',
+}
+METADATA_NAMESPACES = {
+    'default': 'http://schemas.microsoft.com/deepzoom/2009',
 }
 
 
@@ -85,19 +89,19 @@ class FamilySearchUser:
         manifest_element: Element = ElementTree.fromstring(manifest_xml_text)
         images_xml = manifest_element.findall(
             './default:entry[@indexing:rel="relations/image"]',
-            namespaces=NAMESPACES,
+            namespaces=MANIFEST_NAMESPACES,
         )
         image_futures = []
         for image_xml in images_xml:
             image_id = image_xml.get('{http://familysearch.org/idx}uuid')
             image_metadata_url = image_xml.find(
                 './default:link[@rel="relations/image/deepzoom"]',
-                NAMESPACES,
+                MANIFEST_NAMESPACES,
             )
             image_metadata_url = image_metadata_url.get('href')
             thumbnail_element = image_xml.find(
                 './default:link[@rel="relations/image/thumbnail"]',
-                NAMESPACES,
+                MANIFEST_NAMESPACES,
             )
             thumbnail_url = thumbnail_element.get('href')
             family_search_image = FamilySearchImage(
@@ -138,18 +142,18 @@ class FamilySearchImage:
         self.thumbnail = await get_image(self.thumbnail_url, client)
 
     async def get_full_size_image(self, client):
-        print(self.image_metadata_url)
         async with client.get(self.image_metadata_url) as metadata_response:
             metadata_xml_text = await metadata_response.text()
-        print(metadata_response.request_info.headers)
-        print(metadata_xml_text)
         image_metadata_element: Element = ElementTree.fromstring(
             metadata_xml_text
         )
         tile_size = int(image_metadata_element.get('TileSize'))
         image_format = image_metadata_element.get('Format')
         tile_overlap = int(image_metadata_element.get('Overlap'))
-        size_element = image_metadata_element.find('./Size')
+        size_element = image_metadata_element.find(
+            './default:Size',
+            namespaces=METADATA_NAMESPACES,
+        )
         image_width = int(size_element.get('Width'))
         image_height = int(size_element.get('Height'))
         max_x_tiles = (image_width // tile_size) + 1
@@ -196,10 +200,10 @@ class FamilySearchImage:
         await asyncio.gather(*coroutines)
         # todo: thread pool?
         full_image_bytes = BytesIO()
-        full_image.save(full_image_bytes, 'jpg')
+        full_image.save(full_image_bytes, 'jpeg')
         self.full_size_image = RawImage(
-            image=full_image_bytes.read(),
-            content_type='img/jpg',
+            image=full_image_bytes.getvalue(),
+            content_type='img/jpeg',
         )
 
     @staticmethod
