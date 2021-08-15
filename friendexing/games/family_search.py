@@ -1,6 +1,5 @@
 import asyncio
 import os
-import time
 from base64 import b64encode
 from io import BytesIO
 from math import log, ceil
