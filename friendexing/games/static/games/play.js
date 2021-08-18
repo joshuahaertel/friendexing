@@ -189,3 +189,31 @@ function createToast(message, backgroundColor, options) {
 
   ToastContainer.prepend(toastDiv);
 }
+
+const thumbnailsDiv = document.getElementById('id_thumbnails');
+const imageHolderDiv = document.getElementById('id_image_holder');
+function addImage(thumbnailUrl, imageUrl) {
+  const idNum = imageHolderDiv.childElementCount;
+  const imageDivId = 'id_image_' + idNum;
+
+  const mainImageDiv = document.createElement('div');
+  mainImageDiv.classList.add('col')
+  mainImageDiv.id = imageDivId;
+  if (idNum !== 0) {
+    mainImageDiv.hidden = true;
+  }
+
+  const mainImageElement = document.createElement('img');
+  mainImageElement.src = imageUrl;
+  mainImageElement.classList.add('img-fluid');
+
+  const thumbnailImgElement = document.createElement('img');
+  thumbnailImgElement.id = 'id_thumbnail_' + idNum;
+  thumbnailImgElement.src = thumbnailUrl;
+  thumbnailImgElement.classList.add('img-thumbnail', 'w-24', 'w-md-100');
+  thumbnailImgElement.setAttribute('data-image-id', imageDivId);
+
+  mainImageDiv.appendChild(mainImageElement);
+  imageHolderDiv.appendChild(mainImageDiv);
+  thumbnailsDiv.appendChild(thumbnailImgElement);
+}

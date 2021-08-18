@@ -61,6 +61,10 @@ function getSocket() {
         }
         handleWaitPhase();
       }
+    } else if (type === 'add_images') {
+      data.images.forEach((image_data) => {
+        addImage(image_data.thumbnail_url, image_data.image_url);
+      })
     } else {
       console.error("Unexpected socket reply: " + event.data)
     }

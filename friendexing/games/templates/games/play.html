@@ -40,18 +40,13 @@
         </div>
     </div>
     <div class="row" id="id_body">
-        <div class="col-12 col-md-2 order-2 order-md-1" id="id_thumbnails">
-            <div class="overflow-auto d-flex d-md-block h-md-90vh webkit-img-container">
-                <img id="id_thumbnail_1" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_1">
-                <img id="id_thumbnail_2" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_2">
-                <img id="id_thumbnail_3" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_3">
-                <img id="id_thumbnail_4" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_4">
-                <img id="id_thumbnail_5" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_5">
-                <img id="id_thumbnail_6" src="{% static 'games/demo-1.jpg' %}" class="img-thumbnail w-24 w-md-100" data-image-id="id_image_6">
+        <div class="col-12 col-md-2 order-2 order-md-1">
+            <div class="overflow-auto d-flex d-md-block h-md-90vh webkit-img-container" id="id_thumbnails">
             </div>
         </div>
         <div class="col-md order-1 order-md-2" id="id_main">
             <div id="id_main_image_container" class="row">
+                <!--Todo: Hide this until images appear-->
                 <div class="settings-holder p-0">
                     <div class="settings-column">
                         <button id="id_zoom_in" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-in"></i></button>
@@ -70,24 +65,6 @@
 
                 <div id="id_image_view_port" class="image-viewer">
                     <div id="id_image_holder">
-                        <div class="col" id="id_image_1">
-                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                        </div>
-                        <div class="col" id="id_image_2" hidden>
-                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                        </div>
-                        <div class="col" id="id_image_3" hidden>
-                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                        </div>
-                        <div class="col" id="id_image_4" hidden>
-                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                        </div>
-                        <div class="col" id="id_image_5" hidden>
-                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                        </div>
-                        <div class="col" id="id_image_6" hidden>
-                            <img src="{% static 'games/demo-1.jpg' %}" class="img-fluid">
-                        </div>
                     </div>
                 </div>
             </div>

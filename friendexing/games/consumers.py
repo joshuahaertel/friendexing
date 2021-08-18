@@ -2,6 +2,7 @@ import json
 from time import time
 from typing import Set
 
+from channels.generic.http import AsyncHttpConsumer
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 from games.constants import NUM_TOP_PLAYERS, MessageSeverityLevel
@@ -28,8 +29,20 @@ class PlayConsumer(AsyncWebsocketConsumer):
             self.channel_name,
         )
         await self.accept()
+        await self.send_images()
         await self.send_scores()
         await self.send_state()
+
+    async def send_images(self, _=None):
+        await self.send(text_data=json.dumps({
+            'type': 'add_images',
+            'images': [
+                {
+                    'thumbnail_url': '/images',
+                    'image_url': '/images',
+                }
+            ]
+        }))
 
     async def send_scores(self, _=None):
         top_players = await GameRedisORM.get_top_player_scores(self.game_id)
@@ -166,9 +179,21 @@ class AdminConsumer(AsyncWebsocketConsumer):
         )
 
         await self.accept()
+        await self.send_images()
         await self.send_scores()
         await self.send_guesses()
         await self.send_state()
+
+    async def send_images(self, _=None):
+        await self.send(text_data=json.dumps({
+            'type': 'add_images',
+            'images': [
+                {
+                    'thumbnail_url': '/images',
+                    'image_url': '/images',
+                }
+            ]
+        }))
 
     async def send_scores(self, _=None):
         all_scores = await GameRedisORM.get_player_scores(self.game_id)
@@ -272,3 +297,13 @@ class AdminConsumer(AsyncWebsocketConsumer):
             'answer': event['answer'],
         }))
         await self.send_scores()
+
+
+with open('games/static/games/demo-1.jpg', mode='rb') as image:
+    IMAGE_BYTES = image.read()
+
+
+class ImageConsumer(AsyncHttpConsumer):
+    async def handle(self, body):
+        # TODO: check image permissions
+        await self.send_response(200, IMAGE_BYTES)
