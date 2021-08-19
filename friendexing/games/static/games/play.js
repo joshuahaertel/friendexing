@@ -201,6 +201,8 @@ function addImage(thumbnailUrl, imageUrl) {
   mainImageDiv.id = imageDivId;
   if (idNum !== 0) {
     mainImageDiv.hidden = true;
+  } else {
+    mainImageContainer.hidden = false;
   }
 
   const mainImageElement = document.createElement('img');

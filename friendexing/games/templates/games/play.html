@@ -11,9 +11,9 @@
 </head>
 <body>
 <div id="id_tone_modal" class="modal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
+    <div class="modal-dialog translucent">
+        <div class="modal-content black-background">
+            <div class="modal-body white-text">
                 <h5>Brightness</h5>
                 <i class="bi bi-brightness-alt-low-fill"></i>
                 <input id="id_brightness_slider" type="range" min="0" max="2" value="1" step=".01" class="slider">
@@ -30,6 +30,7 @@
         </div>
     </div>
 </div>
+{% block pre-container %}{% endblock %}
 <div class="container-fluid">
     <div class="row" id="id_header">
         <div class="col">
@@ -45,8 +46,7 @@
             </div>
         </div>
         <div class="col-md order-1 order-md-2" id="id_main">
-            <div id="id_main_image_container" class="row">
-                <!--Todo: Hide this until images appear-->
+            <div id="id_main_image_container" class="row" hidden>
                 <div class="settings-holder p-0">
                     <div class="settings-column">
                         <button id="id_zoom_in" type="button" class="btn btn-dark settings-button p-0"><i class="bi bi-zoom-in"></i></button>

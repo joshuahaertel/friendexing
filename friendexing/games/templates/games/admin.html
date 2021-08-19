@@ -1,6 +1,30 @@
 {% extends "games/play.html" %}
 {% load static %}
 {% block title %}Admin{% endblock %}
+
+{% block pre-container %}
+<div id="id_batch_modal" class="modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Batch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form>
+                <div class="modal-body">
+                    <p>Place the batch URL from FamilySearch in the following text box.</p>
+                    <input id="id_batch_url" type="url" placeholder="https://www.familysearch.org/indexing/batch/3f32a6f5-ab20-43f9-9b4b-8eab8ceb7864" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
 {% block header %}Admin{% endblock %}
 
 {% block answers %}
@@ -13,7 +37,8 @@
 
 {% block controls %}
 <div>
-    <button type="button" id="id_play_button">Play</button>
+    <button type="button" id="id_play_button" class="btn btn-success">Play</button>
+    <button type="button" id="id_batch_button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#id_batch_modal">Add Batch</button>
 </div>
 {% endblock %}
 

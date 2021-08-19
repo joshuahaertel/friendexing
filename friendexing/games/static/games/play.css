@@ -6,17 +6,24 @@
    visibility: hidden;
 }
 
-.modal-dialog {
+.translucent {
   opacity: .75;
 }
 
-.modal-content {
+.black-background {
   background-color: black;
 }
 
-.modal-body {
-  color: white;
+.modal-title {
   text-align: center;
+}
+
+.modal-body {
+  text-align: center;
+}
+
+.white-text {
+  color: white;
 }
 
 .slider {
