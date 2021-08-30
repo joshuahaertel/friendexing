@@ -1,4 +1,6 @@
 import json
+import logging
+import re
 from time import time
 from typing import Set
 
@@ -6,8 +8,16 @@ from channels.generic.http import AsyncHttpConsumer
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 from games.constants import NUM_TOP_PLAYERS, MessageSeverityLevel
+from games.family_search import FamilySearchJob
 from games.models import Phases
-from games.orm import GameRedisORM, PlayerRedisORM
+from games.orm import GameRedisORM, PlayerRedisORM, BatchRedisORM, \
+    ImageModelORM
+
+LOGGER = logging.getLogger(__name__)
+
+UUID_REGEX = re.compile(
+    r'\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b',
+)
 
 
 # todo: show previous answer upon connection
@@ -184,16 +194,25 @@ class AdminConsumer(AsyncWebsocketConsumer):
         await self.send_guesses()
         await self.send_state()
 
-    async def send_images(self, _=None):
-        await self.send(text_data=json.dumps({
-            'type': 'add_images',
-            'images': [
-                {
-                    'thumbnail_url': '/images',
-                    'image_url': '/images',
-                }
-            ]
-        }))
+    async def send_images(self, event=None):
+        if event:
+            batch_ids = [event['batch_id']]
+        else:
+            batch_ids = await GameRedisORM.get_batches(self.game_id) or []
+
+        for batch_id in batch_ids:
+            # todo: append all things to the list at once
+            image_ids = await BatchRedisORM.get_image_ids(batch_id)
+            await self.send(text_data=json.dumps({
+                'type': 'add_images',
+                'images': [
+                    {
+                        'image_url': f'/images/{image_id}',
+                        'thumbnail_url': f'/images/{image_id}/thumbnail',
+                    }
+                    for image_id in image_ids
+                ]
+            }))
 
     async def send_scores(self, _=None):
         all_scores = await GameRedisORM.get_player_scores(self.game_id)
@@ -280,6 +299,24 @@ class AdminConsumer(AsyncWebsocketConsumer):
                     'type': 'send_state',
                 }
             )
+        elif message_type == 'add_batch':
+            batch_url = text_data_json['batch_url']
+            matches = UUID_REGEX.findall(batch_url)
+            if not matches:
+                return  # todo: inform Bad URL
+            batch_id = matches[-1]
+            batch_job = FamilySearchJob(batch_id)
+            batch = await batch_job.run()
+            await GameRedisORM.add_batch(self.game_id, batch)
+            await self.channel_layer.group_send(
+                self.game_id,
+                {
+                    'type': 'send_images',
+                    'batch_id': batch.id,
+                }
+            )
+        else:
+            LOGGER.debug('Unrecognized message: %s', text_data_json)
 
     async def new_guess(self, _):
         await self.send_guesses()
@@ -306,4 +343,13 @@ with open('games/static/games/demo-1.jpg', mode='rb') as image:
 class ImageConsumer(AsyncHttpConsumer):
     async def handle(self, body):
         # TODO: check image permissions
-        await self.send_response(200, IMAGE_BYTES)
+        image_id = self.scope['url_route']['kwargs']['image_id']
+        image_bytes = await ImageModelORM.get_image_bytes(image_id)
+        await self.send_response(200, image_bytes or IMAGE_BYTES)
+
+
+class ThumbnailConsumer(AsyncHttpConsumer):
+    async def handle(self, body):
+        image_id = self.scope['url_route']['kwargs']['image_id']
+        image_bytes = await ImageModelORM.get_thumbnail_bytes(image_id)
+        await self.send_response(200, image_bytes or IMAGE_BYTES)

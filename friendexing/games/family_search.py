@@ -1,15 +1,18 @@
 import asyncio
 import os
+from asyncio import Future
 from base64 import b64encode
 from io import BytesIO
 from math import log, ceil
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 from xml.etree.ElementTree import Element
 
 import aiohttp
 from PIL import Image
 from cryptography.fernet import Fernet
 from defusedxml import ElementTree
+
+from games.models import Batch, ImageModel
 
 SUBSTRING = b'<input type="hidden" name="params" value="'
 SUBSTRING_LEN = len(SUBSTRING)
@@ -34,7 +37,12 @@ METADATA_NAMESPACES = {
 class FamilySearchJob:
     def __init__(self, batch_id: str):
         self.batch_id = batch_id
-        self.future = asyncio.Future()
+        self.future: Future[Batch] = asyncio.Future()
+
+    async def run(self):
+        family_search_user = get_family_search_user()
+        await family_search_user.queue.put(self)
+        return await self.future
 
 
 class FamilySearchUser:
@@ -116,10 +124,14 @@ class FamilySearchUser:
             await asyncio.sleep(0)
         family_search_image_tasks, _ = await asyncio.wait(image_futures)
 
+        image_models: List[ImageModel] = []
         family_search_image_task: asyncio.Task[FamilySearchImage]
         for family_search_image_task in family_search_image_tasks:
             family_search_image = family_search_image_task.result()
-            await family_search_image.save_all()
+            image_model = family_search_image.as_image_model()
+            image_models.append(image_model)
+        batch = Batch(job.batch_id, image_models)
+        job.future.set_result(batch)
 
 
 class FamilySearchImage:
@@ -260,6 +272,13 @@ class FamilySearchImage:
         with open(f'{self.image_id}_thumbnail.jpg', mode='wb') as image_file:
             image_file.write(self.thumbnail.image_bytes)
 
+    def as_image_model(self):
+        return ImageModel(
+            self.image_id,
+            self.full_size_image.image_bytes,
+            self.thumbnail.image_bytes,
+        )
+
 
 async def get_image(image_url, client):
     async with client.get(image_url) as image_response:
@@ -308,3 +327,14 @@ class ImageTile:
             tile_pillow_image,
             self.tile_coordinate,
         )
+
+
+_family_search_user: Optional[FamilySearchUser] = None
+
+
+def get_family_search_user():
+    global _family_search_user
+    if not _family_search_user:
+        _family_search_user = FamilySearchUser()
+        asyncio.create_task(_family_search_user.run())
+    return _family_search_user

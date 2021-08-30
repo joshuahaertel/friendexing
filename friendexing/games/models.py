@@ -1,5 +1,5 @@
-from typing import List, Dict
-from uuid import uuid4, UUID
+from typing import List
+from uuid import uuid4
 
 
 class Game:
@@ -42,26 +42,27 @@ class Player:
 
 
 class Batch:
-    id: UUID
-    images: List['Image']
-    schema: Dict[str, type]
+
+    def __init__(
+            self,
+            id_: str,
+            image_models: List['ImageModel'],
+    ):
+        self.id = id_
+        self.image_models = image_models
 
 
-class Image:
-    id: UUID
-    indexable: bool
-    records: List['Record']
+class ImageModel:
 
-
-class Record:
-    id: UUID
-    fields: Dict[str, 'Field']
-
-
-class Field:
-    id: UUID
-    value: str
-    is_checked: bool
+    def __init__(
+            self,
+            id_: str,
+            image_bytes: bytes,
+            thumbnail_bytes: bytes,
+    ):
+        self.id = id_
+        self.image_bytes = image_bytes
+        self.thumbnail_bytes = thumbnail_bytes
 
 
 class State:

@@ -13,14 +13,15 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 from django.urls import path
 
-from games.consumers import ImageConsumer
+from games.consumers import ImageConsumer, ThumbnailConsumer
 from games.routing import websocket_urlpatterns
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'configuration.settings.base')
 
 application = ProtocolTypeRouter({
     'http': URLRouter([
-        path('images', ImageConsumer.as_asgi()),
+        path('images/<uuid:image_id>', ImageConsumer.as_asgi()),
+        path('images/<uuid:image_id>/thumbnail', ThumbnailConsumer.as_asgi()),
         path('<path:path>', get_asgi_application()),
     ]),
     'websocket': URLRouter(

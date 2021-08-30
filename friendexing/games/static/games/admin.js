@@ -95,6 +95,18 @@ formElement.onsubmit = function(event) {
   return false;
 };
 
+const batchUrlTextInput = document.getElementById('id_batch_url');
+const batchFormElement = document.getElementById('id_batch_form');
+batchFormElement.onsubmit = function(event) {
+  event.preventDefault();
+  const jsonMessage = JSON.stringify({
+    type: 'add_batch',
+    batch_url: batchUrlTextInput.value,
+  });
+  adminSocket.send(jsonMessage);
+  return false;
+};
+
 const playButton = document.getElementById('id_play_button');
 playButton.onclick = function(event) {
   adminSocket.send(JSON.stringify({

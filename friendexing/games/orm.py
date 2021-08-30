@@ -8,7 +8,7 @@ from django.conf import settings
 
 from games.constants import GAME_EXPIRY_SECONDS, TOP_PLAYER_INDEX
 from games.helper_models import PlayerScore
-from games.models import Game, Player, State
+from games.models import Game, Player, State, Batch, ImageModel
 
 
 class RedisORM:
@@ -49,7 +49,6 @@ class GameRedisORM(RedisORM):
         game_id = game.id
         redis_pool = await self.get_redis_pool(redis_pool)
         await self.save_players(game, game_id, redis_pool)
-        # await self.save_batches(game, game_id, redis_pool)
         await self.save_state(game, game_id, redis_pool)
 
     @staticmethod
@@ -63,15 +62,19 @@ class GameRedisORM(RedisORM):
         await redis_pool.zadd(players_key, *player_ids)
         await redis_pool.expire(players_key, GAME_EXPIRY_SECONDS)
 
-    @staticmethod
-    async def save_batches(game, game_id, redis_pool):
-        batch_key = f'batches:{game_id}'
-        batch_ids = []
-        for batch in game.batches:
-            await BatchRedisORM(batch).save()
-            batch_ids.append(batch.id)
-        await redis_pool.rpush(batch_key, *batch_ids)
-        await redis_pool.expire(batch_key, GAME_EXPIRY_SECONDS)
+    @classmethod
+    async def add_batch(cls, game_id, batch, redis_pool=None):
+        batches_key = f'batches:{game_id}'
+        redis_pool = await cls.get_redis_pool(redis_pool)
+        await BatchRedisORM(batch).save()
+        await redis_pool.rpush(batches_key, batch.id)
+        await redis_pool.expire(batches_key, GAME_EXPIRY_SECONDS)
+
+    @classmethod
+    async def get_batches(cls, game_id):
+        batches_key = f'batches:{game_id}'
+        redis_pool = await cls.get_redis_pool()
+        return await redis_pool.lrange(batches_key, 0, -1)
 
     @staticmethod
     async def save_state(game, game_id, redis_pool):
@@ -285,8 +288,62 @@ class PlayerRedisORM(RedisORM):
 
 
 class BatchRedisORM(RedisORM):
+    obj: Batch
+
     async def save(
             self,
             redis_pool: Redis = None,
     ):
-        pass
+        batch = self.obj
+        redis_pool = await self.get_redis_pool(redis_pool)
+        batch_key = f'batch:{batch.id}'
+        image_ids = []
+        for image in batch.image_models:
+            await ImageModelORM(image).save(redis_pool)
+            image_ids.append(image.id)
+        await redis_pool.rpush(batch_key, *image_ids)
+        await redis_pool.expire(batch_key, GAME_EXPIRY_SECONDS)
+
+    @classmethod
+    async def get_image_ids(cls, batch_id):
+        redis_pool = await cls.get_redis_pool()
+        batch_key = f'batch:{batch_id}'
+        return await redis_pool.lrange(batch_key, 0, -1)
+
+
+class ImageModelORM(RedisORM):
+    obj: ImageModel
+
+    async def save(
+            self,
+            redis_pool: Redis = None,
+    ) -> None:
+        image = self.obj
+        redis_pool = await self.get_redis_pool(redis_pool)
+        image_key = f'image:{image.id}'
+        image_dict = {
+            'image_bytes': image.image_bytes,
+            'thumbnail_bytes': image.thumbnail_bytes,
+        }
+        await redis_pool.hmset_dict(image_key, image_dict)
+        await redis_pool.expire(image_key, GAME_EXPIRY_SECONDS)
+
+    @classmethod
+    async def get_image_bytes(cls, image_id):
+        image_key = f'image:{image_id}'
+        redis_pool = await cls.get_redis_pool()
+        return await redis_pool.hget(
+            image_key,
+            'image_bytes',
+            encoding=None,
+        )
+
+    @classmethod
+    async def get_thumbnail_bytes(cls, image_id):
+        image_key = f'image:{image_id}'
+        redis_pool = await cls.get_redis_pool()
+        return await redis_pool.hget(
+            image_key,
+            'thumbnail_bytes',
+            encoding=None,
+        )

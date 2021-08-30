@@ -159,7 +159,7 @@ mainImageContainer.ontouchstart = function(event) {
   }
 };
 
-const ToastContainer = document.getElementById('id_toast_container');
+const toastContainer = document.getElementById('id_toast_container');
 function createToast(message, backgroundColor, options) {
   const toastDiv = document.createElement('div');
   toastDiv.classList.add('toast', 'align-items-center', 'text-white', backgroundColor, 'border-0');
@@ -187,7 +187,7 @@ function createToast(message, backgroundColor, options) {
   });
   bootstrapToast.show();
 
-  ToastContainer.prepend(toastDiv);
+  toastContainer.prepend(toastDiv);
 }
 
 const thumbnailsDiv = document.getElementById('id_thumbnails');
