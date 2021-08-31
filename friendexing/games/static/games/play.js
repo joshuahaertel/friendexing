@@ -230,14 +230,12 @@ function getElementHeight(element) {
 }
 
 
-const headerDiv = document.getElementById('id_header');
 const inputRowDiv = document.getElementById('id_input_row');
 const mainImageDiv = document.getElementById('id_main_image_container');
 function setImageViewerHeight() {
   mainImageDiv.style.height = (
     window.innerHeight
     - getElementHeight(inputRowDiv)
-    - getElementHeight(headerDiv)
     + getElementHeight(toastContainer)
   ) + "px";
 }
