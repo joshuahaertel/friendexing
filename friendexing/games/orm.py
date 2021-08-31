@@ -63,11 +63,16 @@ class GameRedisORM(RedisORM):
         await redis_pool.expire(players_key, GAME_EXPIRY_SECONDS)
 
     @classmethod
-    async def add_batch(cls, game_id, batch, redis_pool=None):
-        batches_key = f'batches:{game_id}'
+    async def add_new_batch(cls, game_id, batch, redis_pool=None):
         redis_pool = await cls.get_redis_pool(redis_pool)
         await BatchRedisORM(batch).save()
-        await redis_pool.rpush(batches_key, batch.id)
+        await cls.add_existing_batch(batch.id, game_id, redis_pool)
+
+    @classmethod
+    async def add_existing_batch(cls, batch_id, game_id, redis_pool=None):
+        redis_pool = await cls.get_redis_pool(redis_pool)
+        batches_key = f'batches:{game_id}'
+        await redis_pool.rpush(batches_key, batch_id)
         await redis_pool.expire(batches_key, GAME_EXPIRY_SECONDS)
 
     @classmethod

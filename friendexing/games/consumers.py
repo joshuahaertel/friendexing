@@ -314,14 +314,19 @@ class AdminConsumer(AsyncWebsocketConsumer):
             if not matches:
                 return  # todo: inform Bad URL
             batch_id = matches[-1]
-            batch_job = FamilySearchJob(batch_id)
-            batch = await batch_job.run()
-            await GameRedisORM.add_batch(self.game_id, batch)
+            # todo: lots of corner case errors here
+            image_ids = await BatchRedisORM.get_image_ids(batch_id)
+            if image_ids:
+                await GameRedisORM.add_existing_batch(batch_id, self.game_id)
+            else:
+                batch_job = FamilySearchJob(batch_id)
+                batch = await batch_job.run()
+                await GameRedisORM.add_new_batch(self.game_id, batch)
             await self.channel_layer.group_send(
                 self.game_id,
                 {
                     'type': 'send_images',
-                    'batch_id': batch.id,
+                    'batch_id': batch_id,
                 }
             )
         else:
