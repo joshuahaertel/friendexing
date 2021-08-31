@@ -3,6 +3,9 @@ const gameId = window.location.pathname.split("/")[2]
 const wsScheme = window.location.protocol == "https:" ? "wss://" : "ws://";
 
 const guessTextBox = document.getElementById('id_guess');
+const batchSubmitButton = document.getElementById('id_batch_submit_button')
+const batchSubmitButtonText = document.getElementById('id_batch_submit_text')
+const batchLoading = document.getElementById('id_batch_loading')
 
 function getSocket() {
 
@@ -62,6 +65,9 @@ function getSocket() {
         handleWaitPhase();
       }
     } else if (type === 'add_images') {
+      batchSubmitButtonText.hidden = false;
+      batchSubmitButton.disabled = false;
+      batchLoading.hidden = true;
       data.images.forEach((image_data) => {
         addImage(image_data.thumbnail_url, image_data.image_url);
       })
@@ -103,7 +109,11 @@ batchFormElement.onsubmit = function(event) {
     type: 'add_batch',
     batch_url: batchUrlTextInput.value,
   });
+  batchUrlTextInput.value = '';
+  batchSubmitButton.disabled = true;
+  batchSubmitButtonText.hidden = true;
   adminSocket.send(jsonMessage);
+  batchLoading.hidden = false;
   return false;
 };
 

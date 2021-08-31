@@ -17,7 +17,12 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-primary" id="id_batch_submit_button">
+                        <span id="id_batch_submit_text">Submit</span>
+                        <div id="id_batch_loading" class="spinner-border spinner-border-sm text-light" role="status" hidden>
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </button>
                 </div>
             </form>
         </div>
