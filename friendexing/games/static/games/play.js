@@ -1,18 +1,3 @@
-const thumbnails = document.querySelectorAll('.img-thumbnail');
-thumbnails.forEach(function(thumbnail) {
-  thumbnail.onclick = function() {
-    const possibleImages = mainImageContainer.querySelectorAll('.col');
-    const possibleImageArray = Array.from(possibleImages);
-    const mainImage = possibleImageArray.find(function(imgElement) {
-      return !imgElement.hidden;
-    });
-    mainImage.hidden = true;
-    const imageId = this.dataset.imageId;
-    const actualImageElement = document.getElementById(imageId);
-    actualImageElement.hidden = false;
-  };
-});
-
 let invert = 0;
 let contrast = 1;
 let tempContrast = contrast;
@@ -190,6 +175,8 @@ function createToast(message, backgroundColor, options) {
   toastContainer.prepend(toastDiv);
 }
 
+let imageShowing = null;
+const images = [];
 const thumbnailsDiv = document.getElementById('id_thumbnails');
 const imageHolderDiv = document.getElementById('id_image_holder');
 function addImage(thumbnailUrl, imageUrl) {
@@ -201,6 +188,7 @@ function addImage(thumbnailUrl, imageUrl) {
   mainImageDiv.id = imageDivId;
   if (idNum !== 0) {
     mainImageDiv.hidden = true;
+    imageShowing = mainImageDiv;
   } else {
     mainImageContainer.hidden = false;
   }
@@ -213,7 +201,11 @@ function addImage(thumbnailUrl, imageUrl) {
   thumbnailImgElement.id = 'id_thumbnail_' + idNum;
   thumbnailImgElement.src = thumbnailUrl;
   thumbnailImgElement.classList.add('img-thumbnail', 'w-24', 'w-md-100');
-  thumbnailImgElement.setAttribute('data-image-id', imageDivId);
+  thumbnailImgElement.onclick = function() {
+    imageShowing.hidden = true;
+    imageShowing = mainImageDiv;
+    imageShowing.hidden = false;
+  }
 
   mainImageDiv.appendChild(mainImageElement);
   imageHolderDiv.appendChild(mainImageDiv);

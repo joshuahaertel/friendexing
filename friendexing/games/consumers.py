@@ -43,16 +43,25 @@ class PlayConsumer(AsyncWebsocketConsumer):
         await self.send_scores()
         await self.send_state()
 
-    async def send_images(self, _=None):
-        await self.send(text_data=json.dumps({
-            'type': 'add_images',
-            'images': [
-                {
-                    'thumbnail_url': '/images',
-                    'image_url': '/images',
-                }
-            ]
-        }))
+    async def send_images(self, event=None):
+        if event:
+            batch_ids = [event['batch_id']]
+        else:
+            batch_ids = await GameRedisORM.get_batches(self.game_id) or []
+
+        for batch_id in batch_ids:
+            # todo: append all things to the list at once
+            image_ids = await BatchRedisORM.get_image_ids(batch_id)
+            await self.send(text_data=json.dumps({
+                'type': 'add_images',
+                'images': [
+                    {
+                        'image_url': f'/images/{image_id}',
+                        'thumbnail_url': f'/images/{image_id}/thumbnail',
+                    }
+                    for image_id in image_ids
+                ]
+            }))
 
     async def send_scores(self, _=None):
         top_players = await GameRedisORM.get_top_player_scores(self.game_id)
