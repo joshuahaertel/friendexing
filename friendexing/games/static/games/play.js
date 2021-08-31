@@ -211,3 +211,39 @@ function addImage(thumbnailUrl, imageUrl) {
   imageHolderDiv.appendChild(mainImageDiv);
   thumbnailsDiv.appendChild(thumbnailImgElement);
 }
+
+
+const heightProperties = [
+  'margin-top',
+  'margin-bottom',
+  'border-top',
+  'border-bottom',
+  'padding-top',
+  'padding-bottom',
+  'height'
+]
+function getElementHeight(element) {
+  const style = window.getComputedStyle(element)
+  return heightProperties
+      .map(propertyName => parseInt(style.getPropertyValue(propertyName), 10))
+      .reduce((prev, cur) => prev + cur)
+}
+
+
+const headerDiv = document.getElementById('id_header');
+const inputRowDiv = document.getElementById('id_input_row');
+const mainImageDiv = document.getElementById('id_main_image_container');
+function setImageViewerHeight() {
+  mainImageDiv.style.height = (
+    window.innerHeight
+    - getElementHeight(inputRowDiv)
+    - getElementHeight(headerDiv)
+    + getElementHeight(toastContainer)
+  ) + "px";
+}
+
+setImageViewerHeight();
+
+window.onresize = function() {
+  setImageViewerHeight()
+}
