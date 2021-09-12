@@ -11,8 +11,12 @@ FROM base as web
 WORKDIR /opt/friendexing/friendexing
 
 # DOCKER_BUILDKIT=1 docker build --target heroku . -t registry.heroku.com/friendexing/web
+#   if necessary, login:
+#     heroku login
+#     heroku container:login
 # docker push registry.heroku.com/friendexing/web
-# This does not work with staged builds: heroku container:push web
+#   This does not work with staged builds:
+#     heroku container:push web
 # heroku container:release web -a friendexing
 FROM web as heroku
 RUN apk add curl
