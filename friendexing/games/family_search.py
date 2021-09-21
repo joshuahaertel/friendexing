@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 from asyncio import Future
 from base64 import b64encode
 from io import BytesIO
@@ -13,6 +14,11 @@ from cryptography.fernet import Fernet
 from defusedxml import ElementTree
 
 from games.models import Batch, ImageModel
+
+RECORD_TEMPLATE_JSON = 'application/vnd.fs-idx-recordtemplate-v3+json'
+
+ENTITY_ID_RE = re.compile(r'entityid=([^;]+)')
+NAME_RE = re.compile(r'name=([^;]+)')
 
 SUBSTRING = b'<input type="hidden" name="params" value="'
 SUBSTRING_LEN = len(SUBSTRING)
@@ -86,6 +92,80 @@ class FamilySearchUser:
             self.json_token = resp.history[1].cookies['fssessionid'].value
 
     async def run_job(self, job: FamilySearchJob):
+        fields, image_models = await asyncio.gather(
+            self.get_fields(job),
+            self.get_images(job),
+        )
+        batch = Batch(job.batch_id, image_models, fields)
+        job.future.set_result(batch)
+
+    async def get_fields(self, job: FamilySearchJob):
+        async with self.session.get(
+                f'https://sg30p0.familysearch.org'
+                f'/service/indexing/project/resources/BATCH'
+                f'/{job.batch_id}/keying.resource.A',
+                headers={'authorization': f'bearer {self.json_token}'}
+        ) as entries_response:
+            entries_json = await entries_response.json()
+        for image_entries in entries_json['images']:
+            entry = image_entries[0]  # It appears there is always an entry
+            content_uri: str = entry['templateProperties']['contentURI']
+            entity_id = ENTITY_ID_RE.findall(content_uri)[0]
+            name = NAME_RE.findall(content_uri)[0]
+            field_descriptions_url = (
+                f'https://sg30p0.familysearch.org'
+                f'/service/indexing/template/templates/PROJECT/'
+                f'{entity_id}/{name}'
+            )
+            async with self.session.get(
+                    field_descriptions_url,
+                    headers={
+                        'authorization': f'bearer {self.json_token}',
+                        'accept': RECORD_TEMPLATE_JSON,
+                    }
+            ) as field_descriptions_resp:
+                field_descriptions_json = await field_descriptions_resp.json()
+            for template_field in field_descriptions_json['templateFields']:
+                template_field['label']
+                # assume is the first one for now
+                template_field['displayNames']['localTexts'][0]["text"]
+                template_field['entryRequired']
+                template_field['entryHelps']['localTexts'][0]["text"]
+                properties = template_field['properties']
+                for property_ in properties:
+                    'alphaSet'  # value: alphanumeric, numeric
+                    'maxLength'
+                    'maxValue'
+                    'minLength'
+                    'minValue'
+                    'capitalization'  # value: auto (key might not exist)
+                    'symbols'  # "(?:^[1|\\?|\\*][6|\\?|\\*][8|\\?|\\*]([4-9]|\\?|\\*)$|^[1|\\?|\\*][6|\\?|\\*][9|\\?|\\*][\\d|\\?|\\*]$|^[1|\\?|\\*]([7-9]|\\?|\\*)(([0-9]|\\?|\\*)|\\?|\\*)(([0-9]|\\?|\\*)|\\?|\\*)$|^[2|\\?|\\*][0|\\?|\\*][01][\\d|\\?|\\*]$|^[2|\\?|\\*][0|\\?|\\*][2|\\?|\\*][01]$)|(?:^([0-9]|\\?|\\*)([0-9]|\\?|\\*)$)|(?:^\\*[\\d|\\?|\\*]$)|(?:^[\\d|\\?|\\*]\\*$)|(?:^\\*$)|(?:^\\*\\d{2}$)|(?:^\\d\\*\\d$)|(?:^\\d{2}\\*$)"
+                    'twoDigit'  # values: true
+                authority_list = template_field['authorityList']
+                # todo placesAPISearch
+                # noList, controlledVocabulary
+                authority_list['listType']
+                authority_id = authority_list['id']
+                authority_uri: Optional[str] = authority_list['uri']
+                if authority_uri:
+                    # assume vocab
+                    vocab_base_url = authority_uri.split('terms')[0]
+                    vocab_url = f'{vocab_base_url}lists/{authority_id}'
+                    async with self.session.get(
+                            vocab_url,
+                            headers={
+                                'authorization': f'bearer {self.json_token}',
+                            }
+                    ) as vocab_list_resp:
+                        vocab_list_json = await vocab_list_resp.json()
+                    acceptable_values = [
+                        # assume the first one is fine
+                        element['labels'][0]['@value']
+                        for element in vocab_list_json['elements']
+                    ]
+
+    async def get_images(self, job: FamilySearchJob):
+        # Todo: Accept json :facepalm:
         async with self.session.get(
                 f'https://sg30p0.familysearch.org'
                 f'/service/indexing/project/images'
@@ -130,8 +210,7 @@ class FamilySearchUser:
             family_search_image = family_search_image_task.result()
             image_model = family_search_image.as_image_model()
             image_models.append(image_model)
-        batch = Batch(job.batch_id, image_models)
-        job.future.set_result(batch)
+        return image_models
 
 
 class FamilySearchImage:
@@ -285,7 +364,7 @@ async def get_image(image_url, client):
         image_bytes = await image_response.read()
         content_type = image_response.headers.get(
             'content-type',
-            # Guess this is a jpeg
+            # Assume this is a jpeg
             'img/jpeg',
         )
         return RawImage(image_bytes, content_type)
