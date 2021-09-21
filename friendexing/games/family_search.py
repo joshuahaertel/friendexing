@@ -108,6 +108,7 @@ class FamilySearchUser:
         ) as entries_response:
             entries_json = await entries_response.json()
         for image_entries in entries_json['images']:
+            image_id = image_entries['id']
             entry = image_entries[0]  # It appears there is always an entry
             content_uri: str = entry['templateProperties']['contentURI']
             entity_id = ENTITY_ID_RE.findall(content_uri)[0]
@@ -133,7 +134,7 @@ class FamilySearchUser:
                 template_field['entryHelps']['localTexts'][0]["text"]
                 properties = template_field['properties']
                 for property_ in properties:
-                    'alphaSet'  # value: alphanumeric, numeric
+                    'alphaSet'  # value: alphanumeric, numeric, alphabetic, ""
                     'maxLength'
                     'maxValue'
                     'minLength'
@@ -143,12 +144,10 @@ class FamilySearchUser:
                     'twoDigit'  # values: true
                 authority_list = template_field['authorityList']
                 # todo placesAPISearch
-                # noList, controlledVocabulary
-                authority_list['listType']
-                authority_id = authority_list['id']
                 authority_uri: Optional[str] = authority_list['uri']
                 if authority_uri:
-                    # assume vocab
+                    # vocab
+                    authority_id = authority_list['id']
                     vocab_base_url = authority_uri.split('terms')[0]
                     vocab_url = f'{vocab_base_url}lists/{authority_id}'
                     async with self.session.get(

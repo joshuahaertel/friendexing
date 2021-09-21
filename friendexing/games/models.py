@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from uuid import uuid4
 
 
@@ -63,6 +63,38 @@ class ImageModel:
         self.id = id_
         self.image_bytes = image_bytes
         self.thumbnail_bytes = thumbnail_bytes
+
+
+class TemplateField:
+    def __init__(
+            self,
+            image_id: str,
+            label: str,
+            display_name: str,
+            required: bool,
+            help_text: str,
+            alpha_type: str,  # todo: enum
+            max_length: Optional[int],
+            max_value: Optional[int],
+            min_length: Optional[int],
+            min_value: Optional[int],
+            auto_capitalization: Optional[bool],
+            symbol: Optional[str],
+            acceptable_values: Optional[List[str]],
+    ) -> None:
+        self.image_id = image_id
+        self.label = label
+        self.display_name = display_name
+        self.required = required
+        self.help_text = help_text
+        self.alpha_type = alpha_type
+        self.max_length = max_length
+        self.max_value = max_value
+        self.min_length = min_length
+        self.min_value = min_value
+        self.auto_capitalization = auto_capitalization
+        self.symbol = symbol
+        self.acceptable_values = acceptable_values
 
 
 class State:
